@@ -1,0 +1,103 @@
+{
+ "actions": [],
+ "creation": "2024-05-22 17:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "registration",
+  "full_name",
+  "email",
+  "phone",
+  "instagram",
+  "qr_code_id",
+  "check_in_section",
+  "checked_in",
+  "check_in_time"
+ ],
+ "fields": [
+  {
+   "fieldname": "registration",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Registration",
+   "options": "Event Registration",
+   "reqd": 1
+  },
+  {
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Full Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Email",
+   "reqd": 1
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone Number"
+  },
+  {
+   "fieldname": "instagram",
+   "fieldtype": "Data",
+   "label": "Instagram Account"
+  },
+  {
+   "fieldname": "qr_code_id",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "QR Code ID",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "check_in_section",
+   "fieldtype": "Section Break",
+   "label": "Check-in Status"
+  },
+  {
+   "default": "0",
+   "fieldname": "checked_in",
+   "fieldtype": "Check",
+   "label": "Checked In",
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "check_in_time",
+   "fieldtype": "Datetime",
+   "label": "Check-in Time",
+   "allow_on_submit": 1
+  }
+ ],
+ "istable": 0,
+ "links": [],
+ "modified": "2024-05-25 10:05:00.000000",
+ "modified_by": "Administrator",
+ "module": "Ticketed Event",
+ "name": "Event Participant",
+ "owner": "Administrator",
+ "naming_rule": "Expression",
+ "autoname": "PART-.YYYY.-.MM.-.####",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
