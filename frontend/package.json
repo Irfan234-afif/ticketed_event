@@ -8,7 +8,8 @@
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 8002",
-    "build": "vite build --base=/assets/ticketed_event/frontend/ && npm run copy-html-entry",
+    "build": "vite build",
+    "build-frontend": "vite build --base=/assets/ticketed_event/frontend/ && npm run copy-html-entry",
     "copy-html-entry": "cp ../ticketed_event/public/frontend/index.html ../ticketed_event/www/_ticketed_event.html",
     "preview": "vite preview",
     "test-local": "cypress open --e2e --browser chrome",

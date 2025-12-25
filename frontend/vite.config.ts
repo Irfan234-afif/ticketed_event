@@ -17,14 +17,14 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
-  buildConfig: false,
-	build: {
-		chunkSizeWarningLimit: 1500,
-		outDir: `../ticketed_event/public/frontend`,
-		emptyOutDir: true,
-		target: "es2015",
-		sourcemap: true,
-	},
+//   buildConfig: false,
+	// build: {
+	// 	chunkSizeWarningLimit: 1500,
+	// 	outDir: `../ticketed_event/public/frontend`,
+	// 	emptyOutDir: true,
+	// 	target: "es2015",
+	// 	sourcemap: true,
+	// },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
