@@ -40,6 +40,13 @@
                 >
                     Register Now
                  </button>
+
+                 <button 
+                    @click="openCheckTicket"
+                    class="text-black font-medium text-[15px] underline hover:text-gray-700 transition-colors"
+                >
+                    Already have a ticket?
+                 </button>
             </div>
         </div>
     </div>
@@ -53,14 +60,61 @@
          />
     </BottomSheet>
 
+    <!-- Check Ticket Modal -->
+    <BottomSheet v-model:show="showCheckTicket" @close="closeCheckTicket">
+        <div class="p-6 flex flex-col gap-5">
+            <div>
+                <h2 class="text-xl font-bold mb-1">Check Ticket</h2>
+                <p class="text-sm text-gray-500">Enter your Registration ID and Email to access your ticket.</p>
+            </div>
+            
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Registration ID</label>
+                    <input 
+                        v-model="checkTicketForm.registrationId" 
+                        type="text" 
+                        placeholder="e.g. LFY-XH59A" 
+                        class="bg-gray-50 border border-gray-200 rounded-lg p-3 w-full text-base focus:outline-none focus:border-black transition-colors placeholder:text-gray-400" 
+                    />
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Email</label>
+                    <input 
+                        v-model="checkTicketForm.email" 
+                        type="email" 
+                        placeholder="email@example.com" 
+                        class="bg-gray-50 border border-gray-200 rounded-lg p-3 w-full text-base focus:outline-none focus:border-black transition-colors placeholder:text-gray-400" 
+                    />
+                </div>
+            </div>
+
+            <div v-if="checkTicketError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-start gap-2">
+                <span>{{ checkTicketError }}</span>
+            </div>
+
+            <Button 
+                :loading="checkTicketResource.loading" 
+                @click="submitCheckTicket" 
+                variant="solid" 
+                class="w-full !bg-black !text-white !h-12 !text-base !rounded-full mt-2"
+            >
+                Find Ticket
+            </Button>
+        </div>
+    </BottomSheet>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { createListResource, createResource, LoadingIndicator } from 'frappe-ui'
+import { ref, reactive } from 'vue'
+import { createListResource, createResource, LoadingIndicator, Button } from 'frappe-ui'
+import { useRouter } from 'vue-router'
 import RegistrationWizard from './RegistrationWizard.vue'
 import BottomSheet from '../components/Common/BottomSheet.vue'
+
+const router = useRouter()
 
 const showWizard = ref(false)
 
@@ -75,5 +129,55 @@ function openRegistration() {
 
 function closeRegistration() {
     showWizard.value = false
+}
+
+// Check Ticket Logic
+const showCheckTicket = ref(false)
+const checkTicketForm = reactive({
+    registrationId: '',
+    email: ''
+})
+const checkTicketError = ref('')
+
+const checkTicketResource = createResource({
+    url: 'ticketed_event.api.verify_ticket_access',
+    makeParams() {
+        return {
+            registration_id: checkTicketForm.registrationId,
+            email: checkTicketForm.email
+        }
+    },
+    onSuccess(data: any) {
+        if (data.access) {
+            router.push({ 
+                name: 'TicketRequest', 
+                params: { id: checkTicketForm.registrationId }
+            })
+            closeCheckTicket()
+        }
+    },
+    onError(err: any) {
+         checkTicketError.value = err.messages ? err.messages.join('\n') : err.message
+    }
+})
+
+function openCheckTicket() {
+    showCheckTicket.value = true
+    checkTicketForm.registrationId = ''
+    checkTicketForm.email = ''
+    checkTicketError.value = ''
+}
+
+function closeCheckTicket() {
+    showCheckTicket.value = false
+}
+
+function submitCheckTicket() {
+    checkTicketError.value = ''
+    if (!checkTicketForm.registrationId || !checkTicketForm.email) {
+        checkTicketError.value = 'Please fill in all fields'
+        return
+    }
+    checkTicketResource.submit()
 }
 </script>

@@ -58,7 +58,19 @@
    "fieldname": "max_capacity",
    "fieldtype": "Int",
    "label": "Max Capacity",
+   "mandatory_depends_on": "eval:!doc.is_unlimited_capacity",
    "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_unlimited_capacity",
+   "fieldtype": "Check",
+   "label": "Is Unlimited Capacity"
+  },
+  {
+   "fieldname": "last_entry_time",
+   "fieldtype": "Time",
+   "label": "Last Entry Time"
   },
   {
    "default": "0",

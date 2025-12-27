@@ -9,10 +9,7 @@
   "email",
   "phone",
   "instagram",
-  "qr_code_id",
-  "check_in_section",
-  "checked_in",
-  "check_in_time"
+  "qr_code_id"
  ],
  "fields": [
   {
@@ -54,24 +51,6 @@
    "label": "QR Code ID",
    "read_only": 1,
    "unique": 1
-  },
-  {
-   "fieldname": "check_in_section",
-   "fieldtype": "Section Break",
-   "label": "Check-in Status"
-  },
-  {
-   "default": "0",
-   "fieldname": "checked_in",
-   "fieldtype": "Check",
-   "label": "Checked In",
-   "allow_on_submit": 1
-  },
-  {
-   "fieldname": "check_in_time",
-   "fieldtype": "Datetime",
-   "label": "Check-in Time",
-   "allow_on_submit": 1
   }
  ],
  "istable": 0,

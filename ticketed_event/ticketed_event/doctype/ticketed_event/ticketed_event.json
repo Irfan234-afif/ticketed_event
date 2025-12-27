@@ -12,7 +12,8 @@
   "section_break_jkl",
   "start_date",
   "end_date",
-  "description"
+  "description",
+  "terms_text"
  ],
  "fields": [
   {
@@ -54,6 +55,11 @@
    "fieldname": "description",
    "fieldtype": "Text Editor",
    "label": "Description"
+  },
+  {
+   "fieldname": "terms_text",
+   "fieldtype": "Text Editor",
+   "label": "Terms & Conditions"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -63,10 +69,11 @@
    "link_fieldname": "event"
   }
  ],
- "modified": "2025-12-25 22:05:56.969978",
+ "modified": "2025-12-27 19:29:16.185169",
  "modified_by": "Administrator",
  "module": "Ticketed Event",
  "name": "Ticketed Event",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {

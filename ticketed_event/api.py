@@ -15,6 +15,9 @@ def get_registration_details(name):
     except frappe.DoesNotExistError:
         frappe.throw("Registration not found", frappe.DoesNotExistError)
 
+    # Security: Since ID is random/unpredictable, possessing the ID is considered authentication.
+    # No extra token check needed.
+
     participants = frappe.get_all(
         "Event Participant",
         filters={"registration": name},
@@ -35,6 +38,32 @@ def get_registration_details(name):
         "participants": participants,
         "schedule": schedule_details
     }
+
+@frappe.whitelist(allow_guest=True)
+def verify_ticket_access(registration_id, email):
+    """
+    Verify if the email matches the registration user or any participant, 
+    and return the security key if valid.
+    """
+    if not registration_id or not email:
+        frappe.throw("Registration ID and Email are required")
+
+    try:
+        registration = frappe.get_doc("Event Registration", registration_id)
+    except frappe.DoesNotExistError:
+        frappe.throw("Invalid Registration ID")
+
+    # Check against User Email (Main Registrant)
+    # The 'user' field in Event Registration stores the email (Event User ID)
+    if registration.user == email:
+        return {"access": True}
+    
+    # Check against Participants
+    participants = frappe.get_all("Event Participant", filters={"registration": registration.name, "email": email})
+    if participants:
+        return {"access": True}
+
+    frappe.throw("Email does not match our records for this registration.")
 
 @frappe.whitelist(allow_guest=True)
 def get_published_events():
@@ -72,6 +101,22 @@ def get_event_schedules(event):
         },
         fields=["name", "date", "start_time", "end_time", "max_capacity", "enrolled_count", "title"],
         order_by="date asc, start_time asc"
+    )
+
+@frappe.whitelist(allow_guest=True)
+def get_scanner_schedules():
+    """
+    Fetch all schedules for today for the scanner dropdown.
+    """
+    from frappe.utils import today
+    
+    return frappe.get_all(
+        "Event Schedule",
+        filters={
+            "date": today()
+        },
+        fields=["name", "title", "date", "start_time", "end_time", "event", "last_entry_time"],
+        order_by="start_time asc"
     )
 
 @frappe.whitelist(allow_guest=True)

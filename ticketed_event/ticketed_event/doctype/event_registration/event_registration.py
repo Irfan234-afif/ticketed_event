@@ -3,14 +3,28 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import now
 
 class EventRegistration(Document):
+	def autoname(self):
+		import string
+		import random
+
+		# Structure: LFY-{RANDOM_SUFFIX}
+		# Random suffix: 6 uppercase characters/digits
+		
+		chars = string.ascii_uppercase + string.digits
+		random_suffix = ''.join(random.choices(chars, k=6))
+		
+		self.name = f"LFY-{random_suffix}"
+
 	def validate(self):
 		self.validate_participant_limit()
-		self.validate_schedule_capacity()
+		self.validate_schedules_capacity()
 		self.validate_user_schedule_uniqueness()
 		self.validate_daily_schedule_limit()
+		self.validate_one_registration_per_event()
+
+
 
 	def get_participant_count(self):
 		return frappe.db.count("Event Participant", {"registration": self.name})
@@ -22,69 +36,89 @@ class EventRegistration(Document):
 		if self.get_participant_count() > 3:
 			frappe.throw("You can register a maximum of 3 participants per registration.")
 
-	def validate_schedule_capacity(self):
-		if not self.schedule:
+	def validate_schedules_capacity(self):
+		if not self.schedules:
 			return
 
-		schedule_doc = frappe.get_doc("Event Schedule", self.schedule)
-		if schedule_doc.max_capacity == 0:
-			return # No limit
-		
-		# Current enrolled
-		current_enrolled = schedule_doc.enrolled_count
-		new_count = self.get_participant_count()
+		for row in self.schedules:
+			schedule_doc = frappe.get_doc("Event Schedule", row.schedule)
+			if schedule_doc.is_unlimited_capacity:
+				continue
+				
+			if schedule_doc.max_capacity == 0:
+				continue # No limit (Legacy behavior or explicit 0)
+			
+			# Current enrolled
+			current_enrolled = schedule_doc.enrolled_count
+			new_count = self.get_participant_count()
 
-		if self.docstatus == 0 or self.docstatus == 1: # Draft or Submitted (pre-update)
-			if current_enrolled + new_count > schedule_doc.max_capacity:
-				frappe.throw(f"Schedule is full. Available slots: {schedule_doc.max_capacity - current_enrolled}")
+			if self.docstatus == 0 or self.docstatus == 1: # Draft or Submitted (pre-update)
+				if current_enrolled + new_count > schedule_doc.max_capacity:
+					frappe.throw(f"Schedule {row.schedule} is full. Available slots: {schedule_doc.max_capacity - current_enrolled}")
 
 	def validate_user_schedule_uniqueness(self):
-		if not self.user or not self.schedule:
+		if not self.user or not self.schedules:
 			return
 		
-		# Check if this user already has a SUBMITTED registration for this same schedule
-		existing = frappe.db.exists("Event Registration", {
-			"user": self.user,
-			"schedule": self.schedule,
-			"docstatus": 1, # Submitted
-			"name": ["!=", self.name]
-		})
-		
-		if existing:
-			frappe.throw(f"User {self.user} is already registered for this schedule (Registration: {existing}).")
-	
+		for row in self.schedules:
+			# Check if this user already has a SUBMITTED registration for this same schedule
+			# Joining with child table to find if user has registered for this schedule
+			existing = frappe.db.sql("""
+				SELECT er.name 
+				FROM `tabEvent Registration` er
+				JOIN `tabEvent Registration Schedule` ers ON ers.parent = er.name
+				WHERE er.user = %(user)s
+				AND ers.schedule = %(schedule)s
+				AND er.docstatus = 1
+				AND er.name != %(current_name)s
+			""", {
+				"user": self.user,
+				"schedule": row.schedule,
+				"current_name": self.name
+			})
+			
+			if existing:
+				frappe.throw(f"User {self.user} is already registered for schedule {row.schedule} (Registration: {existing[0][0]}).")
+
 	def validate_daily_schedule_limit(self):
 		"""Validate that a user (by email) can only register for max 2 schedules per day"""
-		if not self.user or not self.schedule:
+		if not self.user or not self.schedules:
 			return
 		
 		# Get the date of the current schedule
-		current_schedule_date = frappe.db.get_value("Event Schedule", self.schedule, "date")
-		if not current_schedule_date:
-			return
+		# Collect all unique dates from selected schedules
+		current_dates = set()
+		for row in self.schedules:
+			date = frappe.db.get_value("Event Schedule", row.schedule, "date")
+			if date:
+				current_dates.add(date)
 		
-		# Get user's email
-		user_email = frappe.db.get_value("Event User", self.user, "email")
-		if not user_email:
-			return
-		
-		# Count existing submitted registrations for this user on the same date
-		existing_registrations = frappe.db.sql("""
-			SELECT er.name, er.schedule
-			FROM `tabEvent Registration` er
-			INNER JOIN `tabEvent Schedule` es ON er.schedule = es.name
-			WHERE er.user = %(user)s
-			AND es.date = %(date)s
-			AND er.docstatus = 1
-			AND er.name != %(current_name)s
-		""", {
-			"user": self.user,
-			"date": current_schedule_date,
-			"current_name": self.name or ""
-		}, as_dict=True)
-		
-		if len(existing_registrations) >= 2:
-			frappe.throw(f"You can only register for a maximum of 2 schedules per day. You already have {len(existing_registrations)} registrations for {current_schedule_date}.")
+		for date in current_dates:
+			# Count schedules the user is already registered for on this date
+			existing_count = frappe.db.sql("""
+				SELECT COUNT(ers.schedule)
+				FROM `tabEvent Registration` er
+				JOIN `tabEvent Registration Schedule` ers ON ers.parent = er.name
+				JOIN `tabEvent Schedule` es ON ers.schedule = es.name
+				WHERE er.user = %(user)s
+				AND es.date = %(date)s
+				AND er.docstatus = 1
+				AND er.name != %(current_name)s
+			""", {
+				"user": self.user,
+				"date": date,
+				"current_name": self.name
+			})[0][0]
+			
+			# Count schedules in the CURRENT registration for this date
+			current_request_count = 0
+			for row in self.schedules:
+				s_date = frappe.db.get_value("Event Schedule", row.schedule, "date")
+				if s_date == date:
+					current_request_count += 1
+
+			if existing_count + current_request_count > 2:
+				frappe.throw(f"You can only register for a maximum of 2 schedules per day. You already have {existing_count} registrations for {date}, and this registration adds {current_request_count}.")
 
 	def validate_one_registration_per_event(self):
 		"""Validate that a user can only register once per event"""
@@ -104,7 +138,7 @@ class EventRegistration(Document):
 
 	def on_submit(self):
 		self.validate_participant_limit() # Re-check on submission
-		self.validate_schedule_capacity() # Re-check capacity
+		self.validate_schedules_capacity() # Re-check capacity
 		self.update_schedule_count(increment=True)
 		self.send_email_notifications()
 
@@ -112,18 +146,19 @@ class EventRegistration(Document):
 		self.update_schedule_count(increment=False)
 
 	def update_schedule_count(self, increment=True):
-		if not self.schedule:
+		if not self.schedules:
 			return
 		
-		schedule_doc = frappe.get_doc("Event Schedule", self.schedule)
 		count = self.get_participant_count()
 		
-		if increment:
-			schedule_doc.enrolled_count += count
-		else:
-			schedule_doc.enrolled_count = max(0, schedule_doc.enrolled_count - count)
-		
-		schedule_doc.save(ignore_permissions=True)
+		for row in self.schedules:
+			schedule_doc = frappe.get_doc("Event Schedule", row.schedule)
+			if increment:
+				schedule_doc.enrolled_count += count
+			else:
+				schedule_doc.enrolled_count = max(0, schedule_doc.enrolled_count - count)
+			
+			schedule_doc.save(ignore_permissions=True)
 
 	def send_email_notifications(self):
 		# Logic to send email to each participant
@@ -134,32 +169,102 @@ class EventRegistration(Document):
 
 
 @frappe.whitelist()
-def check_in_participant(qr_code_id):
+def check_in_participant(qr_code_id, schedule=None):
+	# Role Check
+	roles = frappe.get_roles()
+	allowed_roles = ["Scanner", "System Manager", "Administrator"]
+	if not any(role in roles for role in allowed_roles):
+		frappe.throw("You do not have permission to perform this action.", frappe.PermissionError)
+
 	# Find participant with this qr_code
-	participant = frappe.db.get_value("Event Participant", {"qr_code_id": qr_code_id}, ["name", "full_name", "checked_in", "registration"], as_dict=True)
+	participant = frappe.db.get_value("Event Participant", {"qr_code_id": qr_code_id}, ["name", "full_name", "registration"], as_dict=True)
 	
 	if not participant:
 		frappe.throw("Invalid QR Code.")
 	
-	if participant.checked_in:
-		frappe.throw(f"Participant {participant.full_name} is already checked in.")
-
 	# Find the submitted registration this participant belongs to
 	if not participant.registration:
 		frappe.throw("Registration record not found for this participant.")
 	
-	registration_status = frappe.db.get_value("Event Registration", participant.registration, "docstatus")
+	registration = frappe.get_doc("Event Registration", participant.registration)
 	
-	if registration_status != 1:
+	if registration.docstatus != 1:
 		frappe.throw("Registration is not submitted.")
 
-	# Update participant check-in status
-	p_doc = frappe.get_doc("Event Participant", participant.name)
-	p_doc.checked_in = 1
-	p_doc.check_in_time = now()
-	p_doc.save(ignore_permissions=True)
+	# Find valid schedules in registration
+	registered_schedules = [row.schedule for row in registration.schedules]
+	if not registered_schedules:
+		frappe.throw("No schedule found in registration.")
+
+	target_schedule = None
+
+	if schedule:
+		# EXPLICIT SCHEDULE CHECK
+		if schedule not in registered_schedules:
+			frappe.throw(f"Participant is not registered for this schedule.")
+		
+		target_schedule = frappe.get_doc("Event Schedule", schedule)
+	else:
+		# AUTO-DETECT (Legacy/Fallback)
+		# Find closest schedule based on current time
+		
+		# Get all schedules details
+		schedule_details = frappe.get_all("Event Schedule", 
+			filters={"name": ["in", registered_schedules]}, 
+			fields=["name", "date", "start_time", "end_time", "last_entry_time"])
+
+		import datetime
+		now = frappe.utils.now_datetime()
+		
+		min_diff = None
+		
+		for s in schedule_details:
+			s_start = frappe.utils.get_datetime(f"{s.date} {s.start_time}")
+			diff = abs((s_start - now).total_seconds())
+
+			if min_diff is None or diff < min_diff:
+				min_diff = diff
+				target_schedule = s
+		
+		if not target_schedule:
+			frappe.throw("Could not determine closest schedule.")
+
+
+	# Check Last Entry Time (Strict Check)
+	if target_schedule.last_entry_time:
+		import datetime
+		now = frappe.utils.now_datetime()
+		# Combine date and last_entry_time
+		entry_cutoff = frappe.utils.get_datetime(f"{target_schedule.date} {target_schedule.last_entry_time}")
+		if now > entry_cutoff:
+			frappe.throw(f"Check-in for this schedule closed at {target_schedule.last_entry_time}.")
+
+	# Check if already checked in for this specific schedule (and participant)
+	existing_checkin = frappe.db.exists("Event Checkin", {
+		"registration": registration.name,
+		"participant": participant.name,
+		"schedule": target_schedule.name
+	})
+
+	if existing_checkin:
+		frappe.throw(f"Participant {participant.full_name} is already checked in for schedule {target_schedule.name}.")
+
+	# Create Event Checkin
+	checkin = frappe.new_doc("Event Checkin")
+	checkin.registration = registration.name
+	checkin.participant = participant.name
+	checkin.event = registration.event
+	checkin.schedule = target_schedule.name
+	checkin.check_in_time = frappe.utils.now() 
+	checkin.save(ignore_permissions=True)
 	
-	return {"status": "success", "participant": participant.full_name, "event": frappe.db.get_value("Event Registration", participant.registration, "event")}
+	return {
+		"status": "success", 
+		"participant": participant.full_name, 
+		"event": registration.event,
+		"schedule": target_schedule.name,
+		"check_in_time": checkin.check_in_time
+	}
 
 @frappe.whitelist(allow_guest=True)
 def create_full_registration(event, schedules, user_data, participants, captcha_token=None):
@@ -208,75 +313,32 @@ def create_full_registration(event, schedules, user_data, participants, captcha_
 		user_doc.phone = phone
 		user_doc.insert(ignore_permissions=True)
 	else:
-		# Update phone/name if missing? Optional. For now just use existing.
 		pass
 
-	# Validate one registration per event BEFORE creating any registrations
-	existing_event_registration = frappe.db.exists("Event Registration", {
-		"user": user_name,
-		"event": event,
-		"docstatus": 1
-	})
+	# One Request = One Registration with multiple schedules
 	
-	if existing_event_registration:
-		frappe.throw(f"You have already registered for this event. Each user can only register once per event.")
-
-	# Validate daily schedule limit BEFORE creating any registrations
-	# Group schedules by date
-	from collections import defaultdict
-	schedule_dates = {}
-	for schedule_name in schedules:
-		schedule_date = frappe.db.get_value("Event Schedule", schedule_name, "date")
-		if schedule_date:
-			schedule_dates[schedule_name] = schedule_date
+	# 2. Create Event Registration (ONE DOC)
+	registration = frappe.new_doc("Event Registration")
+	registration.event = event
+	registration.user = user_name
 	
-	# Count schedules per date in the current request
-	dates_count = defaultdict(int)
+	# Add schedules to child table
 	for schedule_name in schedules:
-		if schedule_name in schedule_dates:
-			dates_count[schedule_dates[schedule_name]] += 1
+		registration.append("schedules", {"schedule": schedule_name})
 	
-	# Check existing registrations for each date
-	for date, new_count in dates_count.items():
-		existing_count = frappe.db.sql("""
-			SELECT COUNT(*) as count
-			FROM `tabEvent Registration` er
-			INNER JOIN `tabEvent Schedule` es ON er.schedule = es.name
-			WHERE er.user = %(user)s
-			AND es.date = %(date)s
-			AND er.docstatus = 1
-		""", {
-			"user": user_name,
-			"date": date
-		}, as_dict=True)[0].count
-		
-		total_count = existing_count + new_count
-		if total_count > 2:
-			frappe.throw(f"You can only register for a maximum of 2 schedules per day. You already have {existing_count} registration(s) for {date}, and you're trying to add {new_count} more.")
+	registration.save(ignore_permissions=True) # Validates capacity and uniqueness
 
-	created_registrations = []
+	# 3. Create Participants
+	for p in participants:
+		part_doc = frappe.new_doc("Event Participant")
+		part_doc.registration = registration.name
+		part_doc.full_name = p.get("full_name")
+		part_doc.email = p.get("email")
+		part_doc.phone = p.get("phone")
+		part_doc.instagram = p.get("instagram")
+		part_doc.insert(ignore_permissions=True)
 
-	# Loop through each selected schedule
-	for schedule_name in schedules:
-		# 2. Create Event Registration
-		registration = frappe.new_doc("Event Registration")
-		registration.event = event
-		registration.schedule = schedule_name
-		registration.user = user_name
-		registration.save(ignore_permissions=True) # Validates capacity and uniqueness
+	# 4. Submit Registration
+	registration.submit()
 
-		# 3. Create Participants
-		for p in participants:
-			part_doc = frappe.new_doc("Event Participant")
-			part_doc.registration = registration.name
-			part_doc.full_name = p.get("full_name")
-			part_doc.email = p.get("email")
-			part_doc.phone = p.get("phone")
-			part_doc.instagram = p.get("instagram")
-			part_doc.insert(ignore_permissions=True)
-
-		# 4. Submit Registration
-		registration.submit()
-		created_registrations.append(registration.name)
-
-	return {"registration": created_registrations}
+	return {"registration": [registration.name]}

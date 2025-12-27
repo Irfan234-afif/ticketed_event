@@ -1,0 +1,79 @@
+{
+ "actions": [],
+ "creation": "2024-12-27 18:35:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "registration",
+  "participant",
+  "event",
+  "schedule",
+  "check_in_time"
+ ],
+ "fields": [
+  {
+   "fieldname": "registration",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Registration",
+   "options": "Event Registration",
+   "reqd": 1
+  },
+  {
+   "fieldname": "participant",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Participant",
+   "options": "Event Participant",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "registration.event",
+   "fieldname": "event",
+   "fieldtype": "Link",
+   "label": "Event",
+   "options": "Ticketed Event",
+   "read_only": 1
+  },
+  {
+   "fieldname": "schedule",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Schedule",
+   "options": "Event Schedule",
+   "reqd": 1
+  },
+  {
+   "fieldname": "check_in_time",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Check-in Time",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-12-27 18:35:00.000000",
+ "modified_by": "Administrator",
+ "module": "Ticketed Event",
+ "name": "Event Checkin",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

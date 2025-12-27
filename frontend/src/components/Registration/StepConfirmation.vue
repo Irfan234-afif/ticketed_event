@@ -76,9 +76,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRegistrationStore } from '@/stores/registration'
-import { createResource } from 'frappe-ui'
+
 
 const store = useRegistrationStore()
 
@@ -129,14 +129,16 @@ function formatSelectedDate(dateStr: string) {
 }
 
 // reCAPTCHA
-const settings = createResource({
-  url: 'ticketed_event.api.get_settings',
-  auto: true,
-  onSuccess(data: any) {
-    if (data.google_recaptcha_site_key) {
-      console.log("google_recaptcha_site_key", data.google_recaptcha_site_key)
-      loadRecaptcha(data.google_recaptcha_site_key)
-    }
+
+onMounted(() => {
+  if (store.recaptchaSiteKey) {
+    loadRecaptcha(store.recaptchaSiteKey)
+  }
+})
+
+watch(() => store.recaptchaSiteKey, (newVal) => {
+  if (newVal) {
+    loadRecaptcha(newVal)
   }
 })
 

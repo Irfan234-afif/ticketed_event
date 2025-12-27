@@ -3,7 +3,7 @@
     <!-- Header (Hidden on Step 1) -->
     <header v-if="store.currentStep > 1" class="bg-white border-b px-6 py-4 flex items-center justify-between sticky top-0 z-10 shrink-0">
       <div class="font-bold text-xl text-black">Event Registration</div>
-      <div class="text-sm text-gray-500">Step {{ store.currentStep }} of 5</div>
+      <div class="text-sm text-gray-500">Step {{ store.currentStep }} of 6</div>
     </header>
 
     <!-- Main Content -->
@@ -37,7 +37,7 @@
 
         <!-- Next / Register / Confirm Button -->
         <Button 
-            v-if="store.currentStep < 5"
+            v-if="store.currentStep < 6"
             variant="solid" 
             class="flex-1 !bg-black !text-white hover:!bg-gray-800"
             size="xl"
@@ -72,6 +72,7 @@ import { createResource, Button, LoadingIndicator } from 'frappe-ui'
 import StepInfo from '@/components/Registration/StepInfo.vue'
 import StepUser from '@/components/Registration/StepUser.vue'
 import StepParticipants from '@/components/Registration/StepParticipants.vue'
+import StepTerms from '@/components/Registration/StepTerms.vue'
 import StepSchedule from '@/components/Registration/StepSchedule.vue'
 import StepConfirmation from '@/components/Registration/StepConfirmation.vue'
 
@@ -92,8 +93,9 @@ const currentStepComponent = computed(() => {
     case 1: return StepInfo
     case 2: return StepUser
     case 3: return StepParticipants
-    case 4: return StepSchedule
-    case 5: return StepConfirmation
+    case 4: return StepTerms
+    case 5: return StepSchedule
+    case 6: return StepConfirmation
     default: return StepInfo
   }
 })
@@ -136,9 +138,19 @@ function validateStep() {
             alert('Please fill details for all participants')
             return false
         }
+        if (!store.selectedDate) {
+            alert('Please select a date')
+            return false
+        }
     }
     if (store.currentStep === 4) {
-         // Step 4 logic depending on design changes? 
+         if (!store.termsAccepted) {
+             alert('Please accept the Terms & Conditions')
+             return false
+         }
+    }
+    if (store.currentStep === 5) {
+         // Step 5 logic depending on design changes? 
          // Assuming schedule selection logic stays same for now
          if (!store.selectedDate) {
              alert('Please select a date')
@@ -164,6 +176,16 @@ function nextStep() {
 }
 
 function submit() {
+    // Check Captcha
+    if (store.recaptchaSiteKey && !store.captchaToken) {
+        alert('Please complete the Catcha check below')
+        const widget = document.getElementById('recaptcha-widget')
+        if (widget) {
+            widget.scrollIntoView({ behavior: 'smooth' })
+        }
+        return
+    }
+
     store.submitRegistration.submit({}, {
         onSuccess(data: any) {
             if (data.registration && data.registration.length > 0) {

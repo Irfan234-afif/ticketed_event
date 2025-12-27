@@ -7,7 +7,8 @@
  "field_order": [
   "user",
   "event",
-  "schedule",
+  "event_name",
+  "schedules",
   "status",
   "amended_from"
  ],
@@ -18,7 +19,8 @@
    "in_list_view": 1,
    "label": "User",
    "options": "Event User",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fieldname": "event",
@@ -26,15 +28,16 @@
    "in_list_view": 1,
    "label": "Event",
    "options": "Ticketed Event",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
-   "fieldname": "schedule",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Schedule",
-   "options": "Event Schedule",
-   "reqd": 1
+   "fieldname": "schedules",
+   "fieldtype": "Table",
+   "label": "Schedules",
+   "options": "Event Registration Schedule",
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "default": "Draft",
@@ -54,6 +57,12 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fetch_from": "event.title",
+   "fieldname": "event_name",
+   "fieldtype": "Data",
+   "label": "Event Name"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -64,7 +73,7 @@
    "link_fieldname": "registration"
   }
  ],
- "modified": "2025-12-25 10:10:24.186196",
+ "modified": "2025-12-27 21:01:34.011019",
  "modified_by": "Administrator",
  "module": "Ticketed Event",
  "name": "Event Registration",

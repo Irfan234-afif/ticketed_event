@@ -3,9 +3,10 @@
     <!-- Header -->
     <div class="mb-8 mt-4">
       <h1 class="text-[24px] leading-tight font-normal text-black mb-4">Thank You for Registering</h1>
-      <p class="text-[#969696] text-[14px] leading-[20px]">
-        Your registration for {{ registration.data.event }} has been successfully submitted. Your arrival barcode will be sent to your email. Please present it upon arrival.
+      <p class="text-[#969696] text-[14px] leading-[20px] mb-2">
+        Your registration for {{ registration.data.event_name }} has been successfully submitted. Your arrival barcode will be sent to your email. Please present it upon arrival.
       </p>
+      <p class="text-[16px] font-bold text-black">Ticket ID: {{ registration.data.name }}</p>
     </div>
 
     <!-- Tickets List -->
