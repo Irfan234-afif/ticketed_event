@@ -73,7 +73,7 @@ def get_published_events():
     return frappe.get_all(
         "Ticketed Event",
         filters={"status": "Published"},
-        fields=["name", "title", "image", "start_date", "end_date"]
+        fields=["name", "title", "image", "video", "start_date", "end_date"]
     )
 
 @frappe.whitelist(allow_guest=True)

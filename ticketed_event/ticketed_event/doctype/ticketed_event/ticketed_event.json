@@ -9,6 +9,7 @@
   "title",
   "status",
   "image",
+  "video",
   "section_break_jkl",
   "start_date",
   "end_date",
@@ -34,6 +35,11 @@
    "fieldname": "image",
    "fieldtype": "Attach Image",
    "label": "Event Image"
+  },
+  {
+   "fieldname": "video",
+   "fieldtype": "Attach",
+   "label": "Event Video"
   },
   {
    "fieldname": "section_break_jkl",
