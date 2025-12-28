@@ -14,15 +14,30 @@
 
         <!-- Landing Content -->
         <div v-else class="h-full relative flex flex-col">
-            <!-- Background Image (Placeholder or Event Image) -->
             <div class="absolute inset-0 z-0">
-                <video v-if="events.data[0].video" playsinline autoplay loop muted preload="metadata"
-                    class="w-full h-full object-cover" :poster="events.data[0].image || 'https://placehold.co/600x800'">
-                    <source :src="events.data[0].video" type="video/mp4">
-                    <img :src="events.data[0].image || 'https://placehold.co/600x800'" alt="Event Background">
-                </video>
-                <img v-else :src="events.data[0].image || 'https://placehold.co/600x800'"
-                    class="w-full h-full object-cover" alt="Event Background" />
+                <!-- Desktop View (md+) -->
+                <div class="hidden md:block w-full h-full">
+                    <video v-if="events.data[0].video_landscape || events.data[0].video_portrait" playsinline autoplay
+                        loop muted preload="metadata" class="w-full h-full object-cover"
+                        :poster="events.data[0].image || 'https://placehold.co/600x800'">
+                        <source :src="events.data[0].video_landscape || events.data[0].video_portrait" type="video/mp4">
+                        <img :src="events.data[0].image || 'https://placehold.co/600x800'" alt="Event Background">
+                    </video>
+                    <img v-else :src="events.data[0].image || 'https://placehold.co/600x800'"
+                        class="w-full h-full object-cover" alt="Event Background" />
+                </div>
+
+                <!-- Mobile View (Default) -->
+                <div class="block md:hidden w-full h-full">
+                    <video v-if="events.data[0].video_portrait || events.data[0].video_landscape" playsinline autoplay
+                        loop muted preload="metadata" class="w-full h-full object-cover"
+                        :poster="events.data[0].image || 'https://placehold.co/600x800'">
+                        <source :src="events.data[0].video_portrait || events.data[0].video_landscape" type="video/mp4">
+                        <img :src="events.data[0].image || 'https://placehold.co/600x800'" alt="Event Background">
+                    </video>
+                    <img v-else :src="events.data[0].image || 'https://placehold.co/600x800'"
+                        class="w-full h-full object-cover" alt="Event Background" />
+                </div>
 
                 <div class="absolute inset-0 bg-black/10"></div>
             </div>

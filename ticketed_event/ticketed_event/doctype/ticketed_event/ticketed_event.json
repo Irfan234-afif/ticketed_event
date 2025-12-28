@@ -37,9 +37,14 @@
    "label": "Event Image"
   },
   {
-   "fieldname": "video",
+   "fieldname": "video_landscape",
    "fieldtype": "Attach",
-   "label": "Event Video"
+   "label": "Event Video (Landscape)"
+  },
+  {
+   "fieldname": "video_portrait",
+   "fieldtype": "Attach",
+   "label": "Event Video (Portrait)"
   },
   {
    "fieldname": "section_break_jkl",
