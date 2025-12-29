@@ -9,6 +9,7 @@
   "email",
   "phone",
   "instagram",
+  "type",
   "qr_code_id"
  ],
  "fields": [
@@ -43,6 +44,13 @@
    "fieldname": "instagram",
    "fieldtype": "Data",
    "label": "Instagram Account"
+  },
+  {
+   "default": "Personal",
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "Personal\nJastiper"
   },
   {
    "fieldname": "qr_code_id",

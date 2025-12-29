@@ -6,7 +6,9 @@
  "field_order": [
   "email",
   "full_name",
-  "phone"
+  "phone",
+  "instagram",
+  "type"
  ],
  "fields": [
   {
@@ -28,6 +30,18 @@
    "fieldname": "phone",
    "fieldtype": "Data",
    "label": "Phone Number"
+  },
+  {
+   "fieldname": "instagram",
+   "fieldtype": "Data",
+   "label": "Instagram Account"
+  },
+  {
+   "default": "Personal",
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "Personal\nJastiper"
   }
  ],
  "index_web_pages_for_search": 1,

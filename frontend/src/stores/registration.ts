@@ -8,12 +8,15 @@ interface Participant {
   email: string;
   phone: string;
   instagram: string;
+  type: string;
 }
 
 interface UserData {
   full_name: string;
   email: string;
   phone: string;
+  instagram: string;
+  type: string;
 }
 
 export const useRegistrationStore = defineStore("registration", () => {
@@ -29,6 +32,8 @@ export const useRegistrationStore = defineStore("registration", () => {
     full_name: "",
     email: "",
     phone: "",
+    instagram: "",
+    type: "Personal"
   });
 
   const participants = ref<Participant[]>([]);
@@ -99,7 +104,8 @@ export const useRegistrationStore = defineStore("registration", () => {
         full_name: user.full_name,
         email: user.email,
         phone: user.phone,
-        instagram: "",
+        instagram: user.instagram,
+        type: user.type
       });
     } else {
       // Update first participant if it matches user intent?
@@ -107,6 +113,8 @@ export const useRegistrationStore = defineStore("registration", () => {
       if (participants.value[0]?.email === user.email) {
         participants.value[0].full_name = user.full_name;
         participants.value[0].phone = user.phone;
+        participants.value[0].instagram = user.instagram;
+        participants.value[0].type = user.type;
       }
     }
   }
@@ -118,6 +126,7 @@ export const useRegistrationStore = defineStore("registration", () => {
         email: "",
         phone: "",
         instagram: "",
+        type: "Personal"
       });
     }
   }
@@ -139,6 +148,8 @@ export const useRegistrationStore = defineStore("registration", () => {
     user.email = "";
     user.full_name = "";
     user.phone = "";
+    user.instagram = "";
+    user.type = "Personal";
     schedulesResource.data = [];
     validationErrors.value = []
     termsAccepted.value = false

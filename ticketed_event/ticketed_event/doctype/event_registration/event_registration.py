@@ -301,6 +301,8 @@ def create_full_registration(event, schedules, user_data, participants, captcha_
 	email = user_data.get("email")
 	full_name = user_data.get("full_name")
 	phone = user_data.get("phone")
+	instagram = user_data.get("instagram")
+	user_type = user_data.get("type", "Personal")
 	
 	if not email:
 		frappe.throw("Email is defined")
@@ -311,9 +313,18 @@ def create_full_registration(event, schedules, user_data, participants, captcha_
 		user_doc.email = email
 		user_doc.full_name = full_name
 		user_doc.phone = phone
+		user_doc.instagram = instagram
+		user_doc.type = user_type
 		user_doc.insert(ignore_permissions=True)
 	else:
-		pass
+		# Update existing user info if needed, or at least type/instagram if missing?
+		# For now, let's update if provided
+		user_doc = frappe.get_doc("Event User", user_name)
+		if instagram:
+			user_doc.instagram = instagram
+		if user_type:
+			user_doc.type = user_type
+		user_doc.save(ignore_permissions=True)
 
 	# One Request = One Registration with multiple schedules
 	
@@ -336,6 +347,7 @@ def create_full_registration(event, schedules, user_data, participants, captcha_
 		part_doc.email = p.get("email")
 		part_doc.phone = p.get("phone")
 		part_doc.instagram = p.get("instagram")
+		part_doc.type = p.get("type", "Personal")
 		part_doc.insert(ignore_permissions=True)
 
 	# 4. Submit Registration
