@@ -21,7 +21,7 @@ def get_registration_details(name):
     participants = frappe.get_all(
         "Event Participant",
         filters={"registration": name},
-        fields=["name", "full_name", "email", "qr_code_id", "checked_in"]
+        fields=["name", "full_name", "email", "qr_code_id"]
     )
 
     schedule_details = None
