@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-6 pb-6">
     <!-- Event Header -->
     <div class="flex flex-col gap-1">
       <h1 class="text-3xl font-bold text-gray-900 leading-tight">

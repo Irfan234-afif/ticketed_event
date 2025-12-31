@@ -66,13 +66,21 @@ def verify_ticket_access(registration_id, email):
     frappe.throw("Email does not match our records for this registration.")
 
 @frappe.whitelist(allow_guest=True)
-def get_published_events():
+def get_published_events(event=None):
     """
     Fetch all published ticketed events.
     """
+    filters = {
+        "status": "Published"
+    }
+    if event:
+        filters["route"] = event
+    else:
+        filters["is_global_event"] = 1
+
     return frappe.get_all(
         "Ticketed Event",
-        filters={"status": "Published"},
+        filters=filters,
         fields=["name", "title", "image", "video_landscape", "video_portrait", "start_date", "end_date"]
     )
 

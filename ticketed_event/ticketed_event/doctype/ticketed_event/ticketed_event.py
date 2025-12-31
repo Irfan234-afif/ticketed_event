@@ -3,6 +3,9 @@
 
 import frappe
 from frappe.model.document import Document
+from frappe.utils import random_string
 
 class TicketedEvent(Document):
-	pass
+	def validate(self):
+		if not self.route:
+			self.route = random_string(6)

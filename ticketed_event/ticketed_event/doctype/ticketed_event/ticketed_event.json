@@ -7,14 +7,17 @@
  "engine": "InnoDB",
  "field_order": [
   "title",
+  "route",
   "status",
+  "is_global_event",
   "image",
-  "video",
   "section_break_jkl",
   "start_date",
   "end_date",
   "description",
-  "terms_text"
+  "terms_text",
+  "video_landscape",
+  "video_portrait"
  ],
  "fields": [
   {
@@ -71,6 +74,20 @@
    "fieldname": "terms_text",
    "fieldtype": "Text Editor",
    "label": "Terms & Conditions"
+  },
+  {
+   "fieldname": "route",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Route",
+   "unique": 1
+  },
+  {
+   "default": "0",
+   "description": "Global make a default event for all participant",
+   "fieldname": "is_global_event",
+   "fieldtype": "Check",
+   "label": "Is Global Event"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -80,7 +97,7 @@
    "link_fieldname": "event"
   }
  ],
- "modified": "2025-12-27 19:29:16.185169",
+ "modified": "2026-01-01 00:17:12.313774",
  "modified_by": "Administrator",
  "module": "Ticketed Event",
  "name": "Ticketed Event",

@@ -297,6 +297,29 @@ def create_full_registration(event, schedules, user_data, participants, captcha_
 	if not isinstance(schedules, list):
 		schedules = [schedules]
 
+	# Pre-check capacity for ALL schedules involved
+	# Each participant will need 1 spot in EACH schedule
+	num_participants = len(participants) if participants else 0
+	
+	if num_participants > 0:
+		from frappe import _
+		for schedule_name in schedules:
+			# Lock and check
+			capacity_data = frappe.db.sql("""
+				SELECT max_capacity, enrolled_count, is_unlimited_capacity, title, name
+				FROM `tabEvent Schedule` 
+				WHERE name = %s 
+				FOR UPDATE
+			""", (schedule_name), as_dict=True)
+
+			if capacity_data:
+				pd = capacity_data[0]
+				if not pd.is_unlimited_capacity:
+					available = pd.max_capacity - pd.enrolled_count
+					if num_participants > available:
+						frappe.throw(_("Not enough seats available for Schedule {0}. Requested: {1}, Available: {2}").format(pd.title or pd.name, num_participants, available))
+
+
 	# 1. Get or Create Event User
 	email = user_data.get("email")
 	full_name = user_data.get("full_name")

@@ -15,40 +15,56 @@
     <div class="px-5 py-6">
       <div class="flex flex-col gap-3">
         <!-- Type -->
-        <div class="group">
-          <select v-model="localParticipant.type"
-            class="w-full bg-[#F5F5F5] text-gray-900 placeholder:text-gray-500 rounded-xl px-4 py-3.5 text-[15px] focus:outline-none focus:ring-1 focus:ring-gray-300 transition-all font-medium appearance-none">
-            <option value="Personal">Personal</option>
-            <option value="Jastiper">Jastiper</option>
-          </select>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Registration Type</label>
+          <div class="relative">
+            <select v-model="localParticipant.type"
+              class="bg-gray-50 border border-gray-200 rounded-lg p-3 w-full text-base focus:outline-none focus:border-black transition-colors placeholder:text-gray-400 appearance-none">
+              <option value="Personal">Personal</option>
+              <option value="Jastiper">Jastiper</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
         </div>
 
         <!-- Full Name -->
-        <div class="group">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Full Name</label>
           <input type="text" v-model="localParticipant.full_name"
-            class="w-full bg-[#F5F5F5] text-gray-900 placeholder:text-gray-500 rounded-xl px-4 py-3.5 text-[15px] focus:outline-none focus:ring-1 focus:ring-gray-300 transition-all font-medium"
-            placeholder="Full Name" />
+            class="bg-gray-50 border border-gray-200 rounded-lg p-3 w-full text-base focus:outline-none focus:border-black transition-colors placeholder:text-gray-400"
+            placeholder="e.g. John Doe" />
         </div>
 
         <!-- Email -->
-        <div class="group">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Email</label>
           <input type="email" v-model="localParticipant.email"
-            class="w-full bg-[#F5F5F5] text-gray-900 placeholder:text-gray-500 rounded-xl px-4 py-3.5 text-[15px] focus:outline-none focus:ring-1 focus:ring-gray-300 transition-all font-medium"
-            placeholder="Email address" />
+            class="bg-gray-50 border rounded-lg p-3 w-full text-base focus:outline-none transition-colors placeholder:text-gray-400"
+            :class="errors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-black'"
+            placeholder="email@example.com" @blur="validateField('email')" />
+          <span v-if="errors.email" class="text-red-500 text-xs">{{ errors.email }}</span>
         </div>
 
         <!-- Phone -->
-        <div class="group">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Phone Number</label>
           <input type="tel" v-model="localParticipant.phone"
-            class="w-full bg-[#F5F5F5] text-gray-900 placeholder:text-gray-500 rounded-xl px-4 py-3.5 text-[15px] focus:outline-none focus:ring-1 focus:ring-gray-300 transition-all font-medium"
-            placeholder="WhatsApp Number" />
+            class="bg-gray-50 border rounded-lg p-3 w-full text-base focus:outline-none transition-colors placeholder:text-gray-400"
+            :class="errors.phone ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-black'"
+            placeholder="e.g. 08123456789" @blur="validateField('phone')" />
+          <span v-if="errors.phone" class="text-red-500 text-xs">{{ errors.phone }}</span>
         </div>
 
         <!-- Instagram -->
-        <div class="group">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-semibold uppercase text-gray-500 tracking-wider">Instagram</label>
           <input type="text" v-model="localParticipant.instagram"
-            class="w-full bg-[#F5F5F5] text-gray-900 placeholder:text-gray-500 rounded-xl px-4 py-3.5 text-[15px] focus:outline-none focus:ring-1 focus:ring-gray-300 transition-all font-medium"
-            placeholder="Instagram (Optional)" />
+            class="bg-gray-50 border border-gray-200 rounded-lg p-3 w-full text-base focus:outline-none focus:border-black transition-colors placeholder:text-gray-400"
+            placeholder="@username" />
         </div>
 
         <!-- Save Button -->
@@ -67,6 +83,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import BottomSheet from '../Common/BottomSheet.vue'
+import { validateEmail, validatePhone } from '@/utils/validators'
 
 const props = defineProps<{
   show: boolean
@@ -84,14 +101,47 @@ const localParticipant = ref({
   type: 'Personal'
 })
 
+const errors = ref({
+  email: '',
+  phone: ''
+})
+
+const validateField = (field: 'email' | 'phone') => {
+  if (field === 'email') {
+    if (!localParticipant.value.email) {
+      errors.value.email = 'Email is required'
+    } else if (!validateEmail(localParticipant.value.email)) {
+      errors.value.email = 'Invalid email format'
+    } else {
+      errors.value.email = ''
+    }
+  }
+
+  if (field === 'phone') {
+    if (!localParticipant.value.phone) {
+      errors.value.phone = 'Phone number is required'
+    } else if (!validatePhone(localParticipant.value.phone)) {
+      errors.value.phone = 'Invalid phone number format'
+    } else {
+      errors.value.phone = ''
+    }
+  }
+}
+
 const isValid = computed(() => {
+  const emailValid = validateEmail(localParticipant.value.email)
+  const phoneValid = validatePhone(localParticipant.value.phone)
+
   return localParticipant.value.full_name &&
     localParticipant.value.email &&
-    localParticipant.value.phone
+    localParticipant.value.phone &&
+    emailValid &&
+    phoneValid
 })
 
 watch(() => props.show, (newVal) => {
   if (newVal) {
+    errors.value = { email: '', phone: '' }
     if (props.participant) {
       localParticipant.value = { ...props.participant }
     } else {

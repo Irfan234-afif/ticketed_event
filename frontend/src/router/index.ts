@@ -14,6 +14,11 @@ const router = createRouter({
       component: HomeView,
     },
     {
+      path: '/:event',
+      name: 'event',
+      component: HomeView,
+    },
+    {
       path: '/about',
       name: 'about',
       component: AboutView,

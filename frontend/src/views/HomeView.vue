@@ -2,7 +2,7 @@
     <div class="relative h-screen w-full overflow-hidden bg-gray-50">
         <!-- Loading State -->
         <div v-if="events.loading" class="flex h-full items-center justify-center">
-            <LoadingIndicator />
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-black"></div>
         </div>
 
         <!-- Error/No Events -->
@@ -19,24 +19,24 @@
                 <div class="hidden md:block w-full h-full">
                     <video v-if="events.data[0].video_landscape || events.data[0].video_portrait" playsinline autoplay
                         loop muted preload="metadata" class="w-full h-full object-cover"
-                        :poster="events.data[0].image || 'https://placehold.co/600x800'">
+                        :poster="events.data[0].image || PLACEHOLDER_IMAGE">
                         <source :src="events.data[0].video_landscape || events.data[0].video_portrait" type="video/mp4">
-                        <img :src="events.data[0].image || 'https://placehold.co/600x800'" alt="Event Background">
+                        <img :src="events.data[0].image || PLACEHOLDER_IMAGE" alt="Event Background">
                     </video>
-                    <img v-else :src="events.data[0].image || 'https://placehold.co/600x800'"
-                        class="w-full h-full object-cover" alt="Event Background" />
+                    <img v-else :src="events.data[0].image || PLACEHOLDER_IMAGE" class="w-full h-full object-cover"
+                        alt="Event Background" />
                 </div>
 
                 <!-- Mobile View (Default) -->
                 <div class="block md:hidden w-full h-full">
                     <video v-if="events.data[0].video_portrait || events.data[0].video_landscape" playsinline autoplay
                         loop muted preload="metadata" class="w-full h-full object-cover"
-                        :poster="events.data[0].image || 'https://placehold.co/600x800'">
+                        :poster="events.data[0].image || PLACEHOLDER_IMAGE">
                         <source :src="events.data[0].video_portrait || events.data[0].video_landscape" type="video/mp4">
-                        <img :src="events.data[0].image || 'https://placehold.co/600x800'" alt="Event Background">
+                        <img :src="events.data[0].image || PLACEHOLDER_IMAGE" alt="Event Background">
                     </video>
-                    <img v-else :src="events.data[0].image || 'https://placehold.co/600x800'"
-                        class="w-full h-full object-cover" alt="Event Background" />
+                    <img v-else :src="events.data[0].image || PLACEHOLDER_IMAGE" class="w-full h-full object-cover"
+                        alt="Event Background" />
                 </div>
 
                 <div class="absolute inset-0 bg-black/10"></div>
@@ -118,10 +118,20 @@ import BottomSheet from '../components/Common/BottomSheet.vue'
 
 const router = useRouter()
 
+const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2000&auto=format&fit=crop'
+
+const event = router.currentRoute?.value?.params?.event;
+console.log("event", event)
+
 const showWizard = ref(false)
 
 const events = createResource({
     url: 'ticketed_event.api.get_published_events',
+    makeParams() {
+        return {
+            event: event
+        }
+    },
     auto: true
 })
 
