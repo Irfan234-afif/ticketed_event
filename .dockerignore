@@ -1,0 +1,60 @@
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Node modules (will be installed during build)
+**/node_modules/
+**/dist/
+**/build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Test files
+tests/
+test/
+*.test.js
+*.test.ts
+__tests__/
+
+# Environment files (but allow docker/.env for build)
+.env
+.env.local
+!docker/.env
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
