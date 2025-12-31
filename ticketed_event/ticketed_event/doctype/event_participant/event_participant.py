@@ -17,6 +17,7 @@ class EventParticipant(Document):
 
 	def after_insert(self):
 		self.update_enrollment(1)
+		self.send_confirmation_email()
 	
 	def on_trash(self):
 		self.update_enrollment(-1)
@@ -67,4 +68,166 @@ class EventParticipant(Document):
 			filters={"name": ["in", schedule_names]}, 
 			fields=["name", "title", "max_capacity", "enrolled_count", "is_unlimited_capacity"]
 		)
+
+	def send_confirmation_email(self):
+		"""Send confirmation email with QR code to participant"""
+		try:
+			# Generate QR Code
+			qr_code_base64 = self.generate_qr_code()
+			
+			# Fetch registration details
+			registration = frappe.get_doc("Event Registration", self.registration)
+			
+			# Fetch event details
+			event = frappe.get_doc("Ticketed Event", self.event)
+			
+			# Fetch parent email from Event User
+			parent_email = frappe.db.get_value("Event User", registration.user, "email")
+			
+			# Fetch schedules with all needed fields in one query
+			scheduler_rows = frappe.get_all("Event Registration Schedule", 
+				filters={"parent": self.registration}, 
+				fields=["schedule"]
+			)
+			
+			schedule_names = [row.schedule for row in scheduler_rows]
+			schedules = []
+			
+			if schedule_names:
+				schedules = frappe.get_all("Event Schedule", 
+					filters={"name": ["in", schedule_names]}, 
+					fields=["name", "title", "date", "start_time", "end_time", "last_entry_time"]
+				)
+			
+			# Check if any schedule has last_entry_time
+			has_last_entry_time = any(s.get("last_entry_time") for s in schedules)
+			
+			# Format dates
+			from frappe.utils import formatdate
+			event_start_date = formatdate(event.start_date, "dd MMM yyyy") if event.start_date else "N/A"
+			event_end_date = formatdate(event.end_date, "dd MMM yyyy") if event.end_date else "N/A"
+			
+			# Format schedules with dates and times
+			formatted_schedules = []
+			for s in schedules:
+				formatted_schedules.append({
+					"name": s.get("name"),
+					"title": s.get("title"),
+					"date": formatdate(s.get("date"), "dd MMM yyyy") if s.get("date") else "N/A",
+					"start_time": s.get("start_time"),
+					"end_time": s.get("end_time"),
+					"last_entry_time": s.get("last_entry_time"),
+				})
+			
+			# Get event image URL (if exists)
+			event_image_url = None
+			if event.image:
+				from frappe.utils import get_url
+				event_image_url = get_url() + event.image
+			
+			# Generate QR code URL using external API
+			from urllib.parse import quote
+			qr_code_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={quote(self.qr_code_id)}"
+			
+			# Prepare email context
+			context = {
+				"ticket_id": self.name,
+				"registration_id": registration.name,
+				"participant_name": self.full_name,
+				"participant_email": self.email,
+				"parent_email": parent_email or "N/A",
+				"event_name": event.title,
+				"event_start_date": event_start_date,
+				"event_end_date": event_end_date,
+				"event_image": event_image_url,
+				"schedules": formatted_schedules,
+				"has_last_entry_time": has_last_entry_time,
+				"qr_code_url": qr_code_url,
+				"qr_code_id": self.qr_code_id,
+				"terms_text": event.terms_text if hasattr(event, 'terms_text') else None,
+				"current_year": frappe.utils.now_datetime().year
+			}
+			
+			# Render email template
+			import os
+			template_path = os.path.join(
+				os.path.dirname(__file__), 
+				"event_participant_email.html"
+			)
+			
+			with open(template_path, 'r') as f:
+				template_content = f.read()
+			
+			from jinja2 import Template
+			template = Template(template_content)
+			html_content = template.render(**context)
+			
+			# Send email - QR code is loaded from external URL, no attachments needed
+			frappe.sendmail(
+				recipients=[self.email],
+				subject=f"Registration Confirmed: {event.title}",
+				message=html_content,
+				now=True
+			)
+			
+			frappe.logger().info(f"Confirmation email sent to {self.email} for participant {self.name}")
+			
+		except Exception as e:
+			# Log error but don't block participant creation
+			frappe.logger().error(f"Failed to send confirmation email to {self.email}: {str(e)}")
+			frappe.log_error(f"Email sending failed for participant {self.name}: {str(e)}", "Event Participant Email Error")
+
+	def generate_qr_code(self):
+		"""Generate QR code from qr_code_id and return as base64 string"""
+		import qrcode
+		import io
+		import base64
+		
+		# Create QR code instance
+		qr = qrcode.QRCode(
+			version=1,
+			error_correction=qrcode.constants.ERROR_CORRECT_L,
+			box_size=10,
+			border=4,
+		)
+		
+		# Add data
+		qr.add_data(self.qr_code_id)
+		qr.make(fit=True)
+		
+		# Create image
+		img = qr.make_image(fill_color="black", back_color="white")
+		
+		# Convert to base64
+		buffer = io.BytesIO()
+		img.save(buffer, format='PNG')
+		qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+		
+		return qr_code_base64
+
+	def generate_qr_code_bytes(self):
+		"""Generate QR code from qr_code_id and return as bytes for attachment"""
+		import qrcode
+		import io
+		
+		# Create QR code instance
+		qr = qrcode.QRCode(
+			version=1,
+			error_correction=qrcode.constants.ERROR_CORRECT_L,
+			box_size=10,
+			border=4,
+		)
+		
+		# Add data
+		qr.add_data(self.qr_code_id)
+		qr.make(fit=True)
+		
+		# Create image
+		img = qr.make_image(fill_color="black", back_color="white")
+		
+		# Convert to bytes
+		buffer = io.BytesIO()
+		img.save(buffer, format='PNG')
+		
+		return buffer.getvalue()
 
