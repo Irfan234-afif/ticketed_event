@@ -9,7 +9,6 @@
   "event",
   "event_name",
   "schedules",
-  "status",
   "amended_from"
  ],
  "fields": [
@@ -40,15 +39,6 @@
    "search_index": 1
   },
   {
-   "default": "Draft",
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Status",
-   "options": "Draft\nSubmitted\nCancelled",
-   "reqd": 1
-  },
-  {
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
@@ -73,7 +63,7 @@
    "link_fieldname": "registration"
   }
  ],
- "modified": "2025-12-27 21:01:34.011019",
+ "modified": "2026-01-01 00:23:31.217172",
  "modified_by": "Administrator",
  "module": "Ticketed Event",
  "name": "Event Registration",
