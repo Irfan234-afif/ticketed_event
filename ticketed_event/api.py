@@ -24,19 +24,23 @@ def get_registration_details(name):
         fields=["name", "full_name", "email", "qr_code_id"]
     )
 
-    schedule_details = None
-    if registration.schedule:
-        schedule_details = frappe.db.get_value(
-            "Event Schedule", 
-            registration.schedule, 
-            ["title", "date", "start_time", "end_time"], 
-            as_dict=True
-        )
+    # Fetch all schedules from the child table
+    schedule_details = []
+    if registration.schedules:
+        for row in registration.schedules:
+            schedule = frappe.db.get_value(
+                "Event Schedule", 
+                row.schedule, 
+                ["title", "date", "start_time", "end_time"], 
+                as_dict=True
+            )
+            if schedule:
+                schedule_details.append(schedule)
 
     return {
         "registration": registration,
         "participants": participants,
-        "schedule": schedule_details
+        "schedules": schedule_details  # Changed from 'schedule' to 'schedules' to reflect multiple schedules
     }
 
 @frappe.whitelist(allow_guest=True)
