@@ -72,9 +72,6 @@ class EventParticipant(Document):
 	def send_confirmation_email(self):
 		"""Send confirmation email with QR code to participant"""
 		try:
-			# Generate QR Code
-			qr_code_base64 = self.generate_qr_code()
-			
 			# Fetch registration details
 			registration = frappe.get_doc("Event Registration", self.registration)
 			
@@ -176,58 +173,3 @@ class EventParticipant(Document):
 			# Log error but don't block participant creation
 			frappe.logger().error(f"Failed to send confirmation email to {self.email}: {str(e)}")
 			frappe.log_error(f"Email sending failed for participant {self.name}: {str(e)}", "Event Participant Email Error")
-
-	def generate_qr_code(self):
-		"""Generate QR code from qr_code_id and return as base64 string"""
-		import qrcode
-		import io
-		import base64
-		
-		# Create QR code instance
-		qr = qrcode.QRCode(
-			version=1,
-			error_correction=qrcode.constants.ERROR_CORRECT_L,
-			box_size=10,
-			border=4,
-		)
-		
-		# Add data
-		qr.add_data(self.qr_code_id)
-		qr.make(fit=True)
-		
-		# Create image
-		img = qr.make_image(fill_color="black", back_color="white")
-		
-		# Convert to base64
-		buffer = io.BytesIO()
-		img.save(buffer, format='PNG')
-		qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
-		
-		return qr_code_base64
-
-	def generate_qr_code_bytes(self):
-		"""Generate QR code from qr_code_id and return as bytes for attachment"""
-		import qrcode
-		import io
-		
-		# Create QR code instance
-		qr = qrcode.QRCode(
-			version=1,
-			error_correction=qrcode.constants.ERROR_CORRECT_L,
-			box_size=10,
-			border=4,
-		)
-		
-		# Add data
-		qr.add_data(self.qr_code_id)
-		qr.make(fit=True)
-		
-		# Create image
-		img = qr.make_image(fill_color="black", back_color="white")
-		
-		# Convert to bytes
-		buffer = io.BytesIO()
-		img.save(buffer, format='PNG')
-		
-		return buffer.getvalue()
-
