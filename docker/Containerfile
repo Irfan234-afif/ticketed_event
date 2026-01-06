@@ -56,7 +56,15 @@ RUN bench init \
 
 # Copy ticketed_event app (build context is ticketed_event root)
 # CACHE BREAKPOINT: Changes to ticketed_event code will only trigger rebuild FROM HERE
+
 COPY --chown=frappe:frappe ticketed_event /home/frappe/frappe-bench/apps/ticketed_event/ticketed_event
+
+# Optimize cache by copying package files first
+COPY --chown=frappe:frappe frontend/package.json /home/frappe/frappe-bench/apps/ticketed_event/frontend/
+
+RUN if [ -f "/home/frappe/frappe-bench/apps/ticketed_event/frontend/package.json" ]; then \
+  cd /home/frappe/frappe-bench/apps/ticketed_event/frontend && yarn install; fi
+
 COPY --chown=frappe:frappe frontend /home/frappe/frappe-bench/apps/ticketed_event/frontend
 COPY --chown=frappe:frappe pyproject.toml README.md license.txt /home/frappe/frappe-bench/apps/ticketed_event/
 
@@ -65,7 +73,7 @@ RUN cd /home/frappe/frappe-bench/apps/ticketed_event && /home/frappe/frappe-benc
 
 # Build frontend
 RUN if [ -d "/home/frappe/frappe-bench/apps/ticketed_event/frontend" ]; then \
-  cd /home/frappe/frappe-bench/apps/ticketed_event/frontend && yarn install && yarn build && rm -rf node_modules; fi
+  cd /home/frappe/frappe-bench/apps/ticketed_event/frontend && yarn build && rm -rf node_modules; fi
 
 FROM base AS backend
 
