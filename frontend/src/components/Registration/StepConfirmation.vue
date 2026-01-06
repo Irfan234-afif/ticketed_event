@@ -45,7 +45,7 @@
     <!-- Arrival Date Section -->
     <div class="flex flex-col gap-4">
       <h3 class="text-[16px] font-normal text-black tracking-[-0.4px]">Arrival Date</h3>
-      <div v-if="store.selectedDate" class="bg-[#F4F4F4] rounded-[10px] px-7 py-4 flex items-start justify-start">
+      <div v-if="store.selectedDate" class="bg-[#F4F4F4] rounded-[10px] px-7 py-4 flex items-start justify-start gap-1">
         <span class="font-bold">{{ store.selectedDate.title }}</span>
         <span class="font-normal"> - {{ formatSelectedDate(store.selectedDate.date) }}</span>
       </div>
@@ -73,11 +73,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, watch, ref } from 'vue'
 import { useRegistrationStore } from '@/stores/registration'
 
 
 const store = useRegistrationStore()
+const widgetId = ref<number | null>(null)
 
 const dateStr = computed(() => {
   if (!store.selectedDate) return ''
@@ -198,7 +199,7 @@ function renderWidget(siteKey: string) {
   }
 
   try {
-    window.grecaptcha.render('recaptcha-widget', {
+    widgetId.value = window.grecaptcha.render('recaptcha-widget', {
       sitekey: siteKey,
       callback: (token: string) => {
         store.captchaToken = token
@@ -211,6 +212,18 @@ function renderWidget(siteKey: string) {
     console.error('Error rendering reCAPTCHA widget:', error)
   }
 }
+
+function resetCaptcha() {
+  if (widgetId.value !== null && window.grecaptcha) {
+    window.grecaptcha.reset(widgetId.value)
+    store.captchaToken = null // Clear token in store as well
+  }
+}
+
+defineExpose({
+  resetCaptcha
+})
+
 </script>
 
 <script lang="ts">

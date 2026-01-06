@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-lg mx-auto p-6 min-h-screen bg-white flex flex-col" v-if="registration.data">
+  <div class="max-w-lg mx-auto p-6 pb-16 min-h-screen bg-white flex flex-col" v-if="registration.data">
     <!-- Header -->
     <div class="mb-8 mt-4">
       <h1 class="text-[24px] leading-tight font-normal text-black mb-4">Thank You for Registering</h1>
@@ -41,7 +41,7 @@
   <BottomSheet :show="showQR" @update:show="showQR = $event" @close="closeQR">
     <template #header>
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <div class="font-bold text-lg">E-ticket | {{ scheduleTitles || 'Event' }}</div>
+        <div class="font-bold text-lg">E-ticket <span class="font-light">|</span> {{ scheduleTitles || 'Event' }}</div>
         <button @click="closeQR" class="text-sm text-black font-medium">Cancel</button>
       </div>
     </template>

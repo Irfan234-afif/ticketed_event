@@ -2,8 +2,8 @@
   <div class="flex flex-col gap-6 pb-6">
     <!-- Event Header -->
     <div class="flex flex-col gap-1">
-      <h1 class="text-3xl font-bold text-gray-900 leading-tight">
-        {{ store.event?.subject || 'Lafiye Unveils 2026' }}
+      <h1 class="text-3xl font-normal text-black leading-tight">
+        {{ store.event?.title || 'Lafiye Unveils 2026' }}
       </h1>
       <p class="text-gray-500 text-lg">
         {{ formatDateRange(store.event?.starts_on, store.event?.ends_on) }}
@@ -12,9 +12,9 @@
 
     <!-- Section Header -->
     <div class="mt-4">
-      <h3 class="text-lg font-bold text-gray-900 mb-2">Pilih slot sesuai waktu kedatangan yang diinginkan.</h3>
-      <p class="text-gray-600 text-sm mt-1">Setiap akun (WhatsApp & email) hanya dapat mendaftar maksimal 2 slot dalam 1
-        hari, Untuk slot tambahan, silakan lakukan registrasi ulang dengan waktu berbeda.</p>
+      <h3 class="text-lg font-medium text-black mb-2">Pilih slot sesuai waktu kedatangan yang diinginkan.</h3>
+      <p class="text-black text-sm mt-1">Setiap akun (WhatsApp & email) hanya dapat mendaftar maksimal 1 slot dalam 1
+        hari.</p>
     </div>
 
     <div v-if="!store.selectedDate" class="text-gray-500">
@@ -77,11 +77,8 @@ function toggleSchedule(schedule: any) {
 
   const index = store.selectedSchedules.indexOf(schedule.name)
   if (index === -1) {
-    if (store.selectedSchedules.length >= 2) {
-      alert("You can select a maximum of 2 schedules.")
-      return
-    }
-    store.selectedSchedules.push(schedule.name)
+    // Single select mode: Replace if exists
+    store.selectedSchedules = [schedule.name]
   } else {
     store.selectedSchedules.splice(index, 1)
   }

@@ -81,10 +81,14 @@ class EventRegistration(Document):
 				frappe.throw(f"User {self.user} is already registered for schedule {row.schedule} (Registration: {existing[0][0]}).")
 
 	def validate_daily_schedule_limit(self):
-		"""Validate that a user (by email) can only register for max 2 schedules per day"""
+		"""Validate that a user (by email) can only register for 1 schedule per day (and in total per event for now based on 'only 1 schedule')"""
 		if not self.user or not self.schedules:
 			return
 		
+		# Validasi 1 schedule per registration transaction
+		if len(self.schedules) > 1:
+			frappe.throw("Mohon maaf, setiap registrasi hanya boleh memilih 1 jadwal.")
+
 		# Get the date of the current schedule
 		# Collect all unique dates from selected schedules
 		current_dates = set()
@@ -110,15 +114,9 @@ class EventRegistration(Document):
 				"current_name": self.name
 			})[0][0]
 			
-			# Count schedules in the CURRENT registration for this date
-			current_request_count = 0
-			for row in self.schedules:
-				s_date = frappe.db.get_value("Event Schedule", row.schedule, "date")
-				if s_date == date:
-					current_request_count += 1
+			if existing_count >= 1:
+				frappe.throw(f"Setiap akun hanya boleh mendaftar 1 jadwal saja. Anda sudah terdaftar untuk tanggal {date}.")
 
-			if existing_count + current_request_count > 2:
-				frappe.throw(f"You can only register for a maximum of 2 schedules per day. You already have {existing_count} registrations for {date}, and this registration adds {current_request_count}.")
 
 	def validate_one_registration_per_event(self):
 		"""Validate that a user can only register once per event"""

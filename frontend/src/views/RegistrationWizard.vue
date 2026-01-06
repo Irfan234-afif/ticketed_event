@@ -1,10 +1,10 @@
 <template>
   <div class="flex flex-col h-full bg-white relative">
-    <!-- Header (Hidden on Step 1) -->
-    <header v-if="store.currentStep > 1"
+    <!-- Header (Hidden on Step 0) -->
+    <header v-if="store.currentStep > 0"
       class="bg-white border-b px-6 py-4 flex items-center justify-between sticky top-0 z-10 shrink-0">
       <div class="font-bold text-xl text-black">Event Registration</div>
-      <div class="text-sm text-gray-500">Step {{ store.currentStep }} of 6</div>
+      <div class="text-sm text-gray-500">Step {{ store.currentStep }} of 5</div>
     </header>
 
     <!-- Main Content -->
@@ -24,17 +24,17 @@
     <!-- Footer Actions -->
     <footer class="bg-white border-t px-6 py-4 sticky bottom-0 z-10 shrink-0 mt-auto">
       <div class="w-full flex justify-between gap-3">
-        <!-- Back Button (Hidden on Step 1) -->
-        <Button v-if="store.currentStep > 1" variant="outline" size="xl" @click="goBack"
+        <!-- Back Button (Hidden on Step 0) -->
+        <Button v-if="store.currentStep > 0" variant="outline" size="xl" @click="goBack"
           :disabled="store.submitRegistration.loading">
           Back
         </Button>
         <div v-else class="hidden"></div>
 
         <!-- Next / Register / Confirm Button -->
-        <Button v-if="store.currentStep < 6" variant="solid" class="flex-1 !bg-black !text-white hover:!bg-gray-800"
+        <Button v-if="store.currentStep < 5" variant="solid" class="flex-1 !bg-black !text-white hover:!bg-gray-800"
           size="xl" @click="nextStep" :loading="store.submitRegistration.loading">
-          {{ store.currentStep === 1 ? 'Register' : 'Next' }}
+          {{ store.currentStep === 0 ? 'Register' : 'Next' }}
         </Button>
         <Button v-else variant="solid" theme="gray" class="flex-1 !bg-black !text-white hover:!bg-gray-800" size="xl"
           @click="submit" :loading="store.submitRegistration.loading">
@@ -75,12 +75,12 @@ const currentStepRef = ref<any>(null)
 
 const currentStepComponent = computed(() => {
   switch (store.currentStep) {
-    case 1: return StepInfo
-    case 2: return StepUser
-    case 3: return StepParticipants
-    case 4: return StepTerms
-    case 5: return StepSchedule
-    case 6: return StepConfirmation
+    case 0: return StepInfo
+    case 1: return StepUser
+    case 2: return StepParticipants
+    case 3: return StepTerms
+    case 4: return StepSchedule
+    case 5: return StepConfirmation
     default: return StepInfo
   }
 })
@@ -101,13 +101,17 @@ const eventResource = createResource({
 
 onMounted(() => {
   store.reset()
+  store.currentStep = 0
   if (props.eventId) {
     eventResource.fetch()
   }
 })
 
 function validateStep() {
-  if (store.currentStep === 2) {
+  if (store.currentStep === 0) {
+    return true
+  }
+  if (store.currentStep === 1) {
     // Try to validate via component method first if available
     // logic: validation should show error messages on fields.
     let isComponentValid = true
@@ -124,7 +128,7 @@ function validateStep() {
       return false
     }
   }
-  if (store.currentStep === 3) {
+  if (store.currentStep === 2) {
     if (store.participants.length === 0) {
       alert('Please add at least one participant')
       return false
@@ -145,15 +149,14 @@ function validateStep() {
       return false
     }
   }
-  if (store.currentStep === 4) {
+  if (store.currentStep === 3) {
     if (!store.termsAccepted) {
       alert('Please accept the Terms & Conditions')
       return false
     }
   }
-  if (store.currentStep === 5) {
-    // Step 5 logic depending on design changes? 
-    // Assuming schedule selection logic stays same for now
+  if (store.currentStep === 4) {
+    // Step 4 logic
     if (!store.selectedDate) {
       alert('Please select a date')
       return false
@@ -208,6 +211,11 @@ function submit() {
       console.error(err)
       const message = err.messages ? err.messages.join('\n') : err.message
       alert(message || 'Registration failed')
+
+      // Reset Captcha on error
+      if (currentStepRef.value && typeof currentStepRef.value.resetCaptcha === 'function') {
+        currentStepRef.value.resetCaptcha()
+      }
     }
   })
 }

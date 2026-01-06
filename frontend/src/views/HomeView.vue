@@ -18,43 +18,34 @@
                 <!-- Desktop View (md+) -->
                 <div class="hidden md:block w-full h-full">
                     <video v-if="events.data[0].video_landscape || events.data[0].video_portrait" playsinline autoplay
-                        loop muted preload="metadata" class="w-full h-full object-cover"
-                        :poster="events.data[0].image || PLACEHOLDER_IMAGE">
+                        loop muted preload="metadata" class="w-full h-full object-cover" :poster="events.data[0].image">
                         <source :src="events.data[0].video_landscape || events.data[0].video_portrait" type="video/mp4">
-                        <img :src="events.data[0].image || PLACEHOLDER_IMAGE" alt="Event Background">
+                        <img :src="events.data[0].image" alt="Event Background">
                     </video>
-                    <img v-else :src="events.data[0].image || PLACEHOLDER_IMAGE" class="w-full h-full object-cover"
-                        alt="Event Background" />
+                    <img v-else :src="events.data[0].image" class="w-full h-full object-cover" alt="Event Background" />
                 </div>
 
                 <!-- Mobile View (Default) -->
                 <div class="block md:hidden w-full h-full">
                     <video v-if="events.data[0].video_portrait || events.data[0].video_landscape" playsinline autoplay
-                        loop muted preload="metadata" class="w-full h-full object-cover"
-                        :poster="events.data[0].image || PLACEHOLDER_IMAGE">
+                        loop muted preload="metadata" class="w-full h-full object-cover" :poster="events.data[0].image">
                         <source :src="events.data[0].video_portrait || events.data[0].video_landscape" type="video/mp4">
-                        <img :src="events.data[0].image || PLACEHOLDER_IMAGE" alt="Event Background">
+                        <img :src="events.data[0].image" alt="Event Background">
                     </video>
-                    <img v-else :src="events.data[0].image || PLACEHOLDER_IMAGE" class="w-full h-full object-cover"
-                        alt="Event Background" />
+                    <img v-else :src="events.data[0].image" class="w-full h-full object-cover" alt="Event Background" />
                 </div>
 
                 <div class="absolute inset-0 bg-black/10"></div>
             </div>
 
             <!-- Content Overlay -->
-            <div class="relative z-10 flex flex-col h-full justify-end p-6 pb-12">
+            <div class="relative z-10 flex flex-col h-full justify-end p-6 pb-16">
 
                 <!-- Bottom Section -->
-                <div class="flex flex-col gap-6 mb-24">
-                    <div>
-                        <h1 class="text-[32px] leading-tight font-normal text-dark mb-2">
-                            {{ events.data[0].title }}
-                        </h1>
-                    </div>
+                <div class="flex flex-col gap-6 mb-24 items-center">
 
                     <button @click="openRegistration"
-                        class="py-4 px-20 bg-black text-white rounded-full text-lg font-medium shadow-lg hover:bg-gray-900 transition-colors w-fit">
+                        class="py-4 px-20 bg-white text-dark rounded-full text-lg font-medium shadow-lg hover:bg-black hover:text-white transition-colors w-fit">
                         Register Now
                     </button>
 
@@ -67,7 +58,7 @@
         </div>
 
         <!-- Bottom Sheet / Wizard -->
-        <BottomSheet v-model:show="showWizard" full-height @close="closeRegistration">
+        <BottomSheet v-model:show="showWizard" full-screen @close="closeRegistration">
             <RegistrationWizard v-if="events.data && events.data[0]" :event-id="events.data[0].name"
                 @close="closeRegistration" />
         </BottomSheet>
@@ -118,7 +109,7 @@ import BottomSheet from '../components/Common/BottomSheet.vue'
 
 const router = useRouter()
 
-const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2000&auto=format&fit=crop'
+
 
 const event = router.currentRoute?.value?.params?.event;
 console.log("event", event)
