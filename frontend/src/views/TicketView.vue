@@ -34,8 +34,9 @@
       </button>
     </div>
   </div>
+  <!-- Loading State -->
   <div v-else class="flex h-screen items-center justify-center">
-    <LoadingIndicator />
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-black"></div>
   </div>
   <!-- QR Modal -->
   <BottomSheet :show="showQR" @update:show="showQR = $event" @close="closeQR">
