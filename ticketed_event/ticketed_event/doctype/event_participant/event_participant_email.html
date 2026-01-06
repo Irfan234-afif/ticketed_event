@@ -6,15 +6,15 @@
 	<title>Event Registration Confirmation</title>
 	<style>
 		body {
-			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-			line-height: 1.5;
-			color: #000000;
-			background-color: #ffffff;
+			font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+			line-height: 1.6;
+			color: #333;
+			background-color: #f5f5f5;
 			margin: 0;
-			padding: 0;
+			padding: 20px;
 		}
 		.container {
-			max-width: 560px;
+			max-width: 600px;
 			margin: 0 auto;
 			background-color: #ffffff;
 		}
@@ -22,128 +22,120 @@
 			padding: 32px 24px;
 		}
 		.header {
+			text-align: center;
 			margin-bottom: 24px;
 		}
-		.header h1 {
-			font-size: 22px;
-			font-weight: 600;
-			line-height: 1.3;
-			color: #000000;
-			margin: 0 0 12px 0;
+		.header img {
+			max-width: 100px;
+			height: auto;
 		}
 		.header p {
 			font-size: 14px;
-			color: #666666;
-			margin: 0;
+			color: #666;
+			margin-top: 16px;
 		}
 		.section {
 			margin-bottom: 24px;
 		}
-		.info-grid {
-			width: 100%;
-			border: 1px solid #E8E8E8;
-			border-radius: 8px;
-			border-collapse: separate;
-			border-spacing: 0;
+		.banner-image {
+			max-width: 100%;
+			height: auto;
+			display: block;
+			border-radius: 4px;
 		}
-		.info-row {
-			border-bottom: 1px solid #E8E8E8;
-		}
-		.info-row:last-child {
-			border-bottom: none;
+		
+		/* Simple Info Display */
+		.info-text {
+			margin-bottom: 12px;
+			padding: 16px;
 		}
 		.info-label {
-			font-size: 13px;
-			color: #666666;
-			padding: 12px 16px;
-			width: 140px;
-			vertical-align: top;
+			font-size: 12px;
+			color: #888;
+			margin-bottom: 4px;
 		}
 		.info-value {
-			font-size: 13px;
-			color: #000000;
-			padding: 12px 16px;
+			font-size: 16px;
+			color: #333;
 			font-weight: 500;
 		}
-		.schedule-table {
-			width: 100%;
-			border: 1px solid #E8E8E8;
-			border-radius: 8px;
-			border-collapse: separate;
-			border-spacing: 0;
+		.info-divider {
+			height: 1px;
+			background: #e0e0e0;
+			margin: 12px 0;
 		}
-		.schedule-table tr {
-			border-bottom: 1px solid #E8E8E8;
+		
+		/* Schedule List */
+		.schedule-item {
+			padding: 16px;
+			margin-bottom: 12px;
 		}
-		.schedule-table tr:last-child {
-			border-bottom: none;
-		}
-		.schedule-table td {
-			padding: 12px 16px;
+		.schedule-item:last-child {
+			margin-bottom: 0;
 		}
 		.schedule-title {
 			font-size: 14px;
 			font-weight: 600;
-			color: #000000;
-			margin: 0 0 4px 0;
+			color: #333;
+			margin: 0 0 8px 0;
 		}
 		.schedule-details {
-			font-size: 12px;
-			color: #666666;
+			font-size: 13px;
+			color: #666;
 			margin: 0;
 		}
+		
+		/* QR Code at Bottom */
 		.qr-section {
 			text-align: center;
-			padding: 24px 0;
-			border-top: 1px solid #E8E8E8;
-			border-bottom: 1px solid #E8E8E8;
-			margin: 24px 0;
+			padding: 32px 24px;
+			background: #fafafa;
+			margin-top: 24px;
+		}
+		.qr-label {
+			font-size: 13px;
+			color: #666;
+			margin: 0 0 16px 0;
 		}
 		.qr-code-box {
 			display: inline-block;
-			padding: 12px;
-			background-color: #ffffff;
-			border: 1px solid #E8E8E8;
-			border-radius: 8px;
+			padding: 16px;
+			background: #ffffff;
 		}
 		.qr-code-box img {
 			width: 200px;
 			height: 200px;
 			display: block;
 		}
-		.qr-id {
-			margin-top: 12px;
-			font-size: 11px;
-			color: #999999;
-			font-family: monospace;
-		}
+		
 		.footer {
-			background-color: #ffffff;
-			border-top: 1px solid #E8E8E8;
+			background: #f5f5f5;
 			padding: 20px 24px;
 			text-align: center;
-			color: #999999;
+			color: #888;
 			font-size: 11px;
 		}
 		.footer p {
 			margin: 4px 0;
 		}
+		
+		.notice-box {
+			background: #fffbea;
+			padding: 12px 16px;
+			margin-top: 16px;
+		}
+		.notice-box p {
+			font-size: 12px;
+			color: #666;
+			margin: 0;
+		}
+		
 		@media only screen and (max-width: 600px) {
-			.container {
-				margin: 0;
-				border-radius: 0;
+			body {
+				padding: 0;
 			}
 			.content {
 				padding: 24px 16px;
-			}
-			.info-label {
-				display: block;
-				width: 100%;
-				padding: 8px 0 2px 0;
-			}
-			.info-value {
-				display: block;
-				padding: 0 0 8px 0;
 			}
 			.qr-code-box img {
 				width: 180px;
@@ -157,75 +149,53 @@
 		<div class="content">
 			<!-- Header -->
 			<div class="header">
-				<h1>Registration Confirmed</h1>
-				<p>Thank you for registering for <strong>{{ event_name }}</strong></p>
+				<img src="https://unveilsrsvp.lafiye.com/files/a5875b1fdc98068961e9a33a39731e18d55d1b6e.png" alt="Event Logo">
+				<p>Your registration for LAFIYE Unveils 2026 has been successfully confirmed.</p>
 			</div>
 
-			<!-- QR Code -->
-			<div class="qr-section">
-				<p style="font-size: 14px; color: #666666; margin: 0 0 16px 0; text-align: center;">
-					<strong>Show this QR code for check-in at the event entrance</strong>
-				</p>
-				<div class="qr-code-box">
-					<img src="{{ qr_code_url }}" alt="QR Code" />
-				</div>
-			</div>
-
-			<!-- Details -->
+			<!-- Event Banner -->
 			<div class="section">
-				<table class="info-grid" cellpadding="0" cellspacing="0">
-					<tr class="info-row">
-						<td class="info-label">Ticket ID</td>
-						<td class="info-value">{{ ticket_id }}</td>
-					</tr>
-					<tr class="info-row">
-						<td class="info-label">Registration ID</td>
-						<td class="info-value">{{ registration_id }}</td>
-					</tr>
-					<tr class="info-row">
-						<td class="info-label">Participant</td>
-						<td class="info-value">{{ participant_name }}</td>
-					</tr>
-					<tr class="info-row">
-						<td class="info-label">Email</td>
-						<td class="info-value">{{ participant_email }}</td>
-					</tr>
-					<tr class="info-row">
-						<td class="info-label">Parent Email</td>
-						<td class="info-value">{{ parent_email }}</td>
-					</tr>
-					<tr class="info-row">
-						<td class="info-label">Event Period</td>
-						<td class="info-value">{{ event_start_date }} - {{ event_end_date }}</td>
-					</tr>
-				</table>
+				<img src="https://unveilsrsvp.lafiye.com/files/244801b50dd3ec41f8c661a018ef31df4b10116e.png" alt="Event Banner" class="banner-image">
+			</div>
+
+			<!-- Participant Info (Ticket ID & Name Only) -->
+			<div class="info-text">
+				<div class="info-label">Ticket ID</div>
+				<div class="info-value">{{ ticket_id }}</div>
+				
+				<div class="info-divider"></div>
+				
+				<div class="info-label">Participant Name</div>
+				<div class="info-value">{{ participant_name }}</div>
 			</div>
 
 			<!-- Schedules -->
 			<div class="section">
-				<table class="schedule-table" cellpadding="0" cellspacing="0">
-					{% for schedule in schedules %}
-					<tr>
-						<td>
-							<p class="schedule-title">{{ schedule.title or schedule.name }}</p>
-							<p class="schedule-details">
-								{{ schedule.date }} • {{ schedule.start_time }} - {{ schedule.end_time }}
-								{% if schedule.last_entry_time %}<br>Last entry: {{ schedule.last_entry_time }}{% endif %}
-							</p>
-						</td>
-					</tr>
-					{% endfor %}
-				</table>
+				{% for schedule in schedules %}
+				<div class="schedule-item">
+					<p class="schedule-title">{{ schedule.title or schedule.name }}</p>
+					<p class="schedule-details">
+						{{ schedule.date }} • {{ schedule.start_time }} - {{ schedule.end_time }}
+						{% if schedule.last_entry_time %}<br>Last entry: {{ schedule.last_entry_time }}{% endif %}
+					</p>
+				</div>
+				{% endfor %}
 			</div>
 
-
-
-			<!-- Notice -->
+			<!-- Important Notice -->
 			{% if has_last_entry_time %}
-			<p style="font-size: 12px; color: #666666; margin: 0; line-height: 1.5;">
-				<strong>Important:</strong> Please arrive before the last entry time and present this QR code at the entrance.
-			</p>
+			<div class="notice-box">
+				<p><strong>Important:</strong> Please arrive before the last entry time and present your QR code at the entrance.</p>
+			</div>
 			{% endif %}
+		</div>
+
+		<!-- QR Code at Bottom -->
+		<div class="qr-section">
+			<p class="qr-label"><strong>Show this QR code at the event entrance</strong></p>
+			<div class="qr-code-box">
+				<img src="{{ qr_code_url }}" alt="QR Code" />
+			</div>
 		</div>
 
 		<!-- Footer -->

@@ -138,7 +138,6 @@ class EventRegistration(Document):
 		self.validate_participant_limit() # Re-check on submission
 		self.validate_schedules_capacity() # Re-check capacity
 		self.update_schedule_count(increment=True)
-		self.send_email_notifications()
 
 	def on_cancel(self):
 		self.update_schedule_count(increment=False)
@@ -157,13 +156,6 @@ class EventRegistration(Document):
 				schedule_doc.enrolled_count = max(0, schedule_doc.enrolled_count - count)
 			
 			schedule_doc.save(ignore_permissions=True)
-
-	def send_email_notifications(self):
-		# Logic to send email to each participant
-		participants = frappe.get_all("Event Participant", filters={"registration": self.name}, fields=["name", "email"])
-		for p in participants:
-			# Placeholder for email logic
-			pass
 
 
 @frappe.whitelist()
