@@ -13,7 +13,8 @@
     <!-- Section Header -->
     <div class="mt-4">
       <h3 class="text-lg font-medium text-black mb-2">Pilih slot sesuai waktu kedatangan yang diinginkan.</h3>
-      <p class="text-black text-sm mt-1">Setiap akun (WhatsApp & email) hanya dapat mendaftar maksimal 1 slot dalam 1
+      <p class="text-black text-sm mt-1">Setiap akun (WhatsApp & email) hanya dapat mendaftar maksimal 2 slot dalam 1,
+        untuk slot tambahan silahkan lakukan registrasi ulang dengan waktu berbeda
         hari.</p>
     </div>
 

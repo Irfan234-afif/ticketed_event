@@ -2,6 +2,9 @@
   <div class="max-w-lg mx-auto p-6 pb-16 min-h-screen bg-white flex flex-col" v-if="registration.data">
     <!-- Header -->
     <div class="mb-8 mt-4">
+      <div class="mb-6 overflow-hidden rounded-2xl shadow-xl border border-gray-50">
+        <img class="w-full object-cover" src="/confirmed_image.jpg" alt="Registration Confirmed">
+      </div>
       <h1 class="text-[24px] leading-tight font-normal text-black mb-4">Thank You for Registering</h1>
       <p class="text-[#969696] text-[14px] leading-[20px] mb-2">
         Your registration for {{ registration.data.event_name }} has been successfully submitted. Your arrival barcode
