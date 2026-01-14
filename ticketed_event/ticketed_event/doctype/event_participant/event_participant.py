@@ -16,11 +16,18 @@ class EventParticipant(Document):
 			self.check_capacity()
 
 	def after_insert(self):
-		self.update_enrollment(1)
+		if self.is_registration_submitted():
+			self.update_enrollment(1)
 		self.send_confirmation_email()
 	
 	def on_trash(self):
-		self.update_enrollment(-1)
+		if self.is_registration_submitted():
+			self.update_enrollment(-1)
+
+	def is_registration_submitted(self):
+		if not self.registration:
+			return False
+		return frappe.db.get_value("Event Registration", self.registration, "docstatus") == 1
 
 	def check_capacity(self):
 		schedules = self.get_schedules()
