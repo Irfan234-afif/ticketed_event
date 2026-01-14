@@ -149,13 +149,28 @@ class EventRegistration(Document):
 		count = self.get_participant_count()
 		
 		for row in self.schedules:
-			schedule_doc = frappe.get_doc("Event Schedule", row.schedule)
+			# Use atomic SQL UPDATE to prevent race conditions and deadlocks
+			# This directly updates the database without loading the document
 			if increment:
-				schedule_doc.enrolled_count += count
+				frappe.db.sql("""
+					UPDATE `tabEvent Schedule`
+					SET enrolled_count = enrolled_count + %s,
+						modified = NOW(),
+						modified_by = %s
+					WHERE name = %s
+				""", (count, frappe.session.user, row.schedule))
 			else:
-				schedule_doc.enrolled_count = max(0, schedule_doc.enrolled_count - count)
+				# For decrement, ensure we don't go below 0
+				frappe.db.sql("""
+					UPDATE `tabEvent Schedule`
+					SET enrolled_count = GREATEST(0, enrolled_count - %s),
+						modified = NOW(),
+						modified_by = %s
+					WHERE name = %s
+				""", (count, frappe.session.user, row.schedule))
 			
-			schedule_doc.save(ignore_permissions=True)
+			# Clear cache for this schedule to ensure fresh data is loaded next time
+			frappe.clear_cache(doctype="Event Schedule", name=row.schedule)
 
 
 @frappe.whitelist()
@@ -287,83 +302,101 @@ def create_full_registration(event, schedules, user_data, participants, captcha_
 	if not isinstance(schedules, list):
 		schedules = [schedules]
 
-	# Pre-check capacity for ALL schedules involved
-	# Each participant will need 1 spot in EACH schedule
-	num_participants = len(participants) if participants else 0
-	
-	if num_participants > 0:
-		from frappe import _
-		for schedule_name in schedules:
-			# Lock and check
-			capacity_data = frappe.db.sql("""
-				SELECT max_capacity, enrolled_count, is_unlimited_capacity, title, name
-				FROM `tabEvent Schedule` 
-				WHERE name = %s 
-				FOR UPDATE
-			""", (schedule_name), as_dict=True)
+	try:
+		# Pre-check capacity for ALL schedules involved
+		# Each participant will need 1 spot in EACH schedule
+		num_participants = len(participants) if participants else 0
+		
+		if num_participants > 0:
+			from frappe import _
+			for schedule_name in schedules:
+				# Lock and check
+				capacity_data = frappe.db.sql("""
+					SELECT max_capacity, enrolled_count, is_unlimited_capacity, title, name
+					FROM `tabEvent Schedule` 
+					WHERE name = %s 
+					FOR UPDATE
+					""", (schedule_name), as_dict=True)
 
-			if capacity_data:
-				pd = capacity_data[0]
-				if not pd.is_unlimited_capacity:
-					available = pd.max_capacity - pd.enrolled_count
-					if num_participants > available:
-						frappe.throw(_("Not enough seats available for Schedule {0}. Requested: {1}, Available: {2}").format(pd.title or pd.name, num_participants, available))
+				if capacity_data:
+					pd = capacity_data[0]
+					if not pd.is_unlimited_capacity:
+						available = pd.max_capacity - pd.enrolled_count
+						if num_participants > available:
+							frappe.throw(_("Not enough seats available for Schedule {0}. Requested: {1}, Available: {2}").format(pd.title or pd.name, num_participants, available))
 
 
-	# 1. Get or Create Event User
-	email = user_data.get("email")
-	full_name = user_data.get("full_name")
-	phone = user_data.get("phone")
-	instagram = user_data.get("instagram")
-	user_type = user_data.get("type", "Personal")
-	
-	if not email:
-		frappe.throw("Email is defined")
+		# 1. Get or Create Event User
+		email = user_data.get("email")
+		full_name = user_data.get("full_name")
+		phone = user_data.get("phone")
+		instagram = user_data.get("instagram")
+		user_type = user_data.get("type", "Personal")
+		
+		if not email:
+			frappe.throw("Email is defined")
 
-	user_name = email
-	if not frappe.db.exists("Event User", user_name):
-		user_doc = frappe.new_doc("Event User")
-		user_doc.email = email
-		user_doc.full_name = full_name
-		user_doc.phone = phone
-		user_doc.instagram = instagram
-		user_doc.type = user_type
-		user_doc.insert(ignore_permissions=True)
-	else:
-		# Update existing user info if needed, or at least type/instagram if missing?
-		# For now, let's update if provided
-		user_doc = frappe.get_doc("Event User", user_name)
-		if instagram:
+		user_name = email
+		if not frappe.db.exists("Event User", user_name):
+			user_doc = frappe.new_doc("Event User")
+			user_doc.email = email
+			user_doc.full_name = full_name
+			user_doc.phone = phone
 			user_doc.instagram = instagram
-		if user_type:
 			user_doc.type = user_type
-		user_doc.save(ignore_permissions=True)
+			user_doc.insert(ignore_permissions=True)
+		else:
+			# Update existing user info if needed, or at least type/instagram if missing?
+			# For now, let's update if provided
+			user_doc = frappe.get_doc("Event User", user_name)
+			if instagram:
+				user_doc.instagram = instagram
+			if user_type:
+				user_doc.type = user_type
+			user_doc.save(ignore_permissions=True)
 
-	# One Request = One Registration with multiple schedules
+		# One Request = One Registration with multiple schedules
+		
+		# 2. Create Event Registration (ONE DOC)
+		registration = frappe.new_doc("Event Registration")
+		registration.event = event
+		registration.user = user_name
+		
+		# Add schedules to child table
+		for schedule_name in schedules:
+			registration.append("schedules", {"schedule": schedule_name})
+		
+		registration.save(ignore_permissions=True) # Validates capacity and uniqueness
+
+		# 3. Create Participants
+		for p in participants:
+			# Retry logic for Naming Series Deadlock (Optimistic Locking)
+			# Try 5 times before giving up
+			for i in range(5):
+				try:
+					part_doc = frappe.new_doc("Event Participant")
+					part_doc.registration = registration.name
+					part_doc.full_name = p.get("full_name")
+					part_doc.email = p.get("email")
+					part_doc.phone = p.get("phone")
+					part_doc.instagram = p.get("instagram")
+					part_doc.type = p.get("type", "Personal")
+					part_doc.insert(ignore_permissions=True)
+					break # Success
+				except frappe.QueryDeadlockError:
+					if i == 4: raise
+					import time, random
+					time.sleep(random.random() * 0.2) # Wait 0-200ms
+
+		# 4. Submit Registration
+		registration.submit()
+
+		# Commit transaction on success
+		frappe.db.commit()
+
+		return {"registration": [registration.name]}
 	
-	# 2. Create Event Registration (ONE DOC)
-	registration = frappe.new_doc("Event Registration")
-	registration.event = event
-	registration.user = user_name
-	
-	# Add schedules to child table
-	for schedule_name in schedules:
-		registration.append("schedules", {"schedule": schedule_name})
-	
-	registration.save(ignore_permissions=True) # Validates capacity and uniqueness
-
-	# 3. Create Participants
-	for p in participants:
-		part_doc = frappe.new_doc("Event Participant")
-		part_doc.registration = registration.name
-		part_doc.full_name = p.get("full_name")
-		part_doc.email = p.get("email")
-		part_doc.phone = p.get("phone")
-		part_doc.instagram = p.get("instagram")
-		part_doc.type = p.get("type", "Personal")
-		part_doc.insert(ignore_permissions=True)
-
-	# 4. Submit Registration
-	registration.submit()
-
-	return {"registration": [registration.name]}
+	except Exception as e:
+		# Rollback on any error
+		frappe.db.rollback()
+		raise
