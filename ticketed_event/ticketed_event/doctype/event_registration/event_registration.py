@@ -169,8 +169,8 @@ class EventRegistration(Document):
 					WHERE name = %s
 				""", (count, frappe.session.user, row.schedule))
 			
-			# Clear cache for this schedule to ensure fresh data is loaded next time
-			frappe.clear_cache(doctype="Event Schedule", name=row.schedule)
+			# Clear cache for this doctype to ensure fresh data is loaded next time
+			frappe.clear_cache(doctype="Event Schedule")
 
 
 @frappe.whitelist()
@@ -372,21 +372,21 @@ def create_full_registration(event, schedules, user_data, participants, captcha_
 		for p in participants:
 			# Retry logic for Naming Series Deadlock (Optimistic Locking)
 			# Try 5 times before giving up
-			for i in range(5):
-				try:
-					part_doc = frappe.new_doc("Event Participant")
-					part_doc.registration = registration.name
-					part_doc.full_name = p.get("full_name")
-					part_doc.email = p.get("email")
-					part_doc.phone = p.get("phone")
-					part_doc.instagram = p.get("instagram")
-					part_doc.type = p.get("type", "Personal")
-					part_doc.insert(ignore_permissions=True)
-					break # Success
-				except frappe.QueryDeadlockError:
-					if i == 4: raise
-					import time, random
-					time.sleep(random.random() * 0.2) # Wait 0-200ms
+			# for i in range(5):
+			# 	try:
+			part_doc = frappe.new_doc("Event Participant")
+			part_doc.registration = registration.name
+			part_doc.full_name = p.get("full_name")
+			part_doc.email = p.get("email")
+			part_doc.phone = p.get("phone")
+			part_doc.instagram = p.get("instagram")
+			part_doc.type = p.get("type", "Personal")
+			part_doc.insert(ignore_permissions=True)
+				# 	break # Success
+				# except frappe.QueryDeadlockError:
+				# 	if i == 4: raise
+				# 	import time, random
+				# 	time.sleep(random.random() * 0.2) # Wait 0-200ms
 
 		# 4. Submit Registration
 		registration.submit()
@@ -395,7 +395,9 @@ def create_full_registration(event, schedules, user_data, participants, captcha_
 		frappe.db.commit()
 
 		return {"registration": [registration.name]}
-	
+	except frappe.QueryDeadlockError:
+		frappe.db.rollback()
+		frappe.throw("Timeout, please try again.")
 	except Exception as e:
 		# Rollback on any error
 		frappe.db.rollback()
